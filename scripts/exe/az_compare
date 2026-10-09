@@ -1,0 +1,31 @@
+#!/usr/bin/env ruby
+$LOAD_PATH.unshift(File.expand_path("../lib", __dir__))
+require "azd_support"
+
+# Reports which Azure resources in this project's resource group are not
+# declared in the Bicep templates (and vice versa).
+#
+# Exit codes: 0 = in sync, 1 = drift detected, 2 = tool error.
+
+config = AzdSupport::Configuration.new
+config.load_azd!
+
+parameters_file = File.join(AzdSupport::Helpers::REPO_ROOT, "infra", "main.bicepparam")
+
+begin
+  missing = ["AZURE_RESOURCE_GROUP", "AZURE_LOCATION"].select { |k| config[k].to_s.strip.empty? }
+  unless missing.empty?
+    raise AzCompare::Error,
+          "missing azd environment values: #{missing.join(", ")} (run `azd env refresh` first)"
+  end
+
+  exit AzCompare::CLI.run(
+    resource_group:   config["AZURE_RESOURCE_GROUP"],
+    location:         config["AZURE_LOCATION"],
+    environment_name: config["AZURE_ENV_NAME"],
+    parameters_file:  parameters_file
+  )
+rescue AzCompare::Error => e
+  $stderr.puts "ERROR: #{e.message}"
+  exit AzCompare::CLI::EXIT_ERROR
+end

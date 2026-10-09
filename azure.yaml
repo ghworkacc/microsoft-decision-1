@@ -1,0 +1,30 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+name: poc-decide-something
+metadata:
+  template: poc-decide-something
+infra:
+  provider: bicep
+  path: infra
+  name: poc-decide-something # this is the linchpin that enables azd env refresh (and avoids strange azd behavior)
+
+deployer-role-assignments:
+  # Grants the storage role to the azd logged in user for the resource name 
+  # output as STORAGE_ACCOUNT_NAME
+  STORAGE_BLOB_DATA_CONTRIBUTOR:
+    role-id: ba92f5b4-2d11-453d-a403-e96b0029c9fe
+    resource-name-env: STORAGE_ACCOUNT_NAME
+
+hooks:
+  preprovision:
+    shell: sh
+    run: ruby scripts/exe/preprovision
+  postprovision:
+    shell: sh
+    run: ruby scripts/exe/postprovision
+  predeploy:
+    shell: sh
+    run: ruby scripts/exe/predeploy
+  postdeploy:
+    shell: sh
+    run: ruby scripts/exe/postdeploy

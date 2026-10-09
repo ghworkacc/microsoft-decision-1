@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+$LOAD_PATH.unshift(File.expand_path("../lib", __dir__))
+require "azd_support"
+
+AzdSupport::LogAzd.tee_to_log!("preprovision")
+AzdSupport::LifecycleRunner.run("preprovision") do |runner|
+  runner.step("validate_local_environment") { AzdSupport::Validation::LocalEnvironment.run }
+end

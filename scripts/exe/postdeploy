@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+$LOAD_PATH.unshift(File.expand_path("../lib", __dir__))
+require "azd_support"
+
+AzdSupport::LogAzd.tee_to_log!("postdeploy")
+AzdSupport::LifecycleRunner.run("postdeploy") do |_runner|
+  # no-op stub — add steps here as postdeploy work is needed
+end
