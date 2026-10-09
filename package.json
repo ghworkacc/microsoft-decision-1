@@ -1,0 +1,29 @@
+{
+    "name": "poc-decide-something",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "files": [
+        "dist"
+    ],
+    "main": "./lib/main.js",
+    "exports": {
+        ".": "./lib/main.js"
+    },
+    "scripts": {
+        "start": "vite",
+        "dev": "vite",
+        "test": "vitest --no-watch",
+        "build": "vite build",
+        "preview": "vite preview"
+    },
+    "devDependencies": {
+        "vite": "^7.0.4",
+        "vitest": "^3.2.4",
+				"@eslint/js": "^9.32.0",
+        "@eslint/json": "^0.13.1",
+        "@njax/eslint-plugin-import": "^2.32.1",
+        "eslint": "^9.32.0",
+        "globals": "^16.3.0"
+    }
+}
