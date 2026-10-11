@@ -6,11 +6,23 @@ function ProbabilityList({ options, chosenKey }) {
     return <ul className="probabilities">{options.map((option) => <li key={option.key} className={option.key === chosenKey ? 'chosen' : undefined}><span className="option-label">{option.label}</span><span className="bar"><span className="bar-fill" style={{ width: percent(option.probability) }} /></span><span className="option-value">{percent(option.probability)}</span></li>)}</ul>;
 }
 
+function ResultChoice({ number, result }) {
+    return <section className="decision-result" aria-live="polite"><h2>Question {number}: <span className="choice">{result.choiceLabel}</span></h2><p className="confidence">Confidence {percent(result.confidence)}</p><ProbabilityList options={result.options} chosenKey={result.choiceKey} /></section>;
+}
+
+function ResultNoul({ number, result }) {
+    return <section className="decision-result" aria-live="polite"><h2>Question {number}: <span className="choice">{result.probability >= 0.5 ? 'Yes' : 'No'}</span></h2><p className="confidence">Yes probability {percent(result.probability)}</p><ProbabilityList options={[{ key: 'yes', label: 'Yes', probability: result.probability }, { key: 'no', label: 'No', probability: 1 - result.probability }]} /></section>;
+}
+
+function ResultScore({ number, result }) {
+    return <section className="decision-result" aria-live="polite"><h2>Question {number}: <span className="choice">{result.scoreLabel}</span></h2><p className="confidence">Score {result.score?.toFixed?.(2) ?? result.score}</p><ProbabilityList options={result.options} /></section>;
+}
+
 function ResultCard({ result }) {
     const number = result.key.replace('question_', '');
-    if (result.type === 'choice') return <section className="decision-result" aria-live="polite"><h2>Question {number}: <span className="choice">{result.choiceLabel}</span></h2><p className="confidence">Confidence {percent(result.confidence)}</p><ProbabilityList options={result.options} chosenKey={result.choiceKey} /></section>;
-    if (result.type === 'noul') return <section className="decision-result" aria-live="polite"><h2>Question {number}: <span className="choice">{result.probability >= 0.5 ? 'Yes' : 'No'}</span></h2><p className="confidence">Yes probability {percent(result.probability)}</p><ProbabilityList options={[{ key: 'yes', label: 'Yes', probability: result.probability }, { key: 'no', label: 'No', probability: 1 - result.probability }]} /></section>;
-    return <section className="decision-result" aria-live="polite"><h2>Question {number}: <span className="choice">{result.scoreLabel}</span></h2><p className="confidence">Score {result.score?.toFixed?.(2) ?? result.score}</p><ProbabilityList options={result.options} /></section>;
+    if (result.type === 'choice') return <ResultChoice number={number} result={result} />;
+    if (result.type === 'noul') return <ResultNoul number={number} result={result} />;
+    return <ResultScore number={number} result={result} />;
 }
 
 export default function DecisionResult({ result }) {
