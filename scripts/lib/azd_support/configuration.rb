@@ -10,7 +10,7 @@ module AzdSupport
   # Usage:
   #   config = AzdSupport::Configuration.new
   #   config.load_azd!
-  #   config["STORAGE_ACCOUNT_NAME"]  # => "stfoobar7x2k"
+  #   config["FOUNDRY_ENDPOINT"]  # => "https://the-new-foundry.services.ai.azure.com"
   #
   class Configuration
     # ------------------------------------------------------------------
@@ -25,12 +25,16 @@ module AzdSupport
     # ------------------------------------------------------------------
     KEYS = {
       # --- azd infrastructure outputs ---
-      "AZURE_RESOURCE_GROUP"  => { source: :azd },
-      "AZURE_ENV_NAME"        => { source: :azd, default: "dev" },
-      "STORAGE_ACCOUNT_NAME"  => { source: :azd },
+      "AZURE_ENV_NAME"           => { source: :azd, default: "dev" },
+      "AZURE_TENANT_ID"          => { source: :azd },
+      "FOUNDRY_ENDPOINT"         => { source: :azd },
+      "DECISION_DEPLOYMENT_NAME" => { source: :azd },
+
+      # --- set by the postprovision hook (Provisioning::RegisterSpaApp) ---
+      "ENTRA_CLIENT_ID"          => { source: :azd },
 
       # --- Application secrets (loaded from ENV) ---
-      "SOME_APP_SECRET"       => { source: :env },
+      "SOME_APP_SECRET"          => { source: :env },
     }.freeze
 
     def initialize
@@ -102,7 +106,7 @@ module AzdSupport
     # Validate that all specified keys are present (non-nil, non-empty).
     # Aborts with a clear error listing any missing keys.
     #
-    #   config.validate!("STORAGE_ACCOUNT_NAME", "AZURE_RESOURCE_GROUP")
+    #   config.validate!("FOUNDRY_ENDPOINT", "ENTRA_CLIENT_ID")
     #
     def validate!(*keys)
       missing = keys.select { |k| val = self[k]; val.nil? || val.to_s.empty? }

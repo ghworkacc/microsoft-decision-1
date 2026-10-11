@@ -7,13 +7,15 @@ infra:
   provider: bicep
   path: infra
   name: poc-decide-something # this is the linchpin that enables azd env refresh (and avoids strange azd behavior)
-
-deployer-role-assignments:
-  # Grants the storage role to the azd logged in user for the resource name 
-  # output as STORAGE_ACCOUNT_NAME
-  STORAGE_BLOB_DATA_CONTRIBUTOR:
-    role-id: ba92f5b4-2d11-453d-a403-e96b0029c9fe
-    resource-name-env: STORAGE_ACCOUNT_NAME
+  # Requires `azd config set alpha.deployment.stacks on` (enforced by preprovision).
+  # The stack manages only the model deployment on the shared Foundry account,
+  # so `azd down` deletes that deployment and detaches (never deletes) resource groups.
+  deploymentStacks:
+    actionOnUnmanage:
+      resources: delete
+      resourceGroups: detach
+    denySettings:
+      mode: none
 
 hooks:
   preprovision:
@@ -28,3 +30,9 @@ hooks:
   postdeploy:
     shell: sh
     run: ruby scripts/exe/postdeploy
+  predown:
+    shell: sh
+    run: ruby scripts/exe/predown
+  postdown:
+    shell: sh
+    run: ruby scripts/exe/postdown

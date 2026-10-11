@@ -1,27 +1,20 @@
-import { dirname, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
-
+// The Entra app registration's SPA redirect URI is http://localhost:5173, so
+// dev and preview must run on exactly that port.
 export default defineConfig({
-		root: '.',
-    build: {
-        lib: {
-            entry: resolve(__dirname, 'lib/main.js'),
-            name: 'Poc Decide Something',
-            fileName: 'poc-decide-something-lib',
-        },
-        rollupOptions: {
-            // make sure to externalize deps that shouldn't be bundled into your library
-            // external: ['vue'],
-            external: [],
-            output: {
-                // Provide global variables to use in the UMD build for externalized deps
-                globals: {
-                    // vue: 'Vue',
-                },
-            },
-        },
+    plugins: [react()],
+    server: {
+        port: 5173,
+        strictPort: true,
+    },
+    preview: {
+        port: 5173,
+        strictPort: true,
+    },
+    test: {
+        environment: 'jsdom',
+        setupFiles: ['./src/test/setup.js'],
     },
 });

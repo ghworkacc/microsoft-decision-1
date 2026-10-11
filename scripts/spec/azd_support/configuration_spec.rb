@@ -10,8 +10,8 @@ RSpec.describe AzdSupport::Configuration do
     end
 
     it "returns the stored value when set" do
-      config.set("STORAGE_ACCOUNT_NAME", "stfoo123")
-      expect(config["STORAGE_ACCOUNT_NAME"]).to eq("stfoo123")
+      config.set("DECISION_DEPLOYMENT_NAME", "msft-decision-1")
+      expect(config["DECISION_DEPLOYMENT_NAME"]).to eq("msft-decision-1")
     end
 
     it "returns the registered default when no value is stored" do
@@ -52,12 +52,12 @@ RSpec.describe AzdSupport::Configuration do
 
   describe "#fetch" do
     it "returns the value when present" do
-      config.set("STORAGE_ACCOUNT_NAME", "stbar456")
-      expect(config.fetch("STORAGE_ACCOUNT_NAME")).to eq("stbar456")
+      config.set("ENTRA_CLIENT_ID", "00000000-0000-0000-0000-000000000001")
+      expect(config.fetch("ENTRA_CLIENT_ID")).to eq("00000000-0000-0000-0000-000000000001")
     end
 
     it "raises KeyError when value is nil" do
-      expect { config.fetch("STORAGE_ACCOUNT_NAME") }.to raise_error(KeyError, /STORAGE_ACCOUNT_NAME/)
+      expect { config.fetch("ENTRA_CLIENT_ID") }.to raise_error(KeyError, /ENTRA_CLIENT_ID/)
     end
   end
 
@@ -76,10 +76,10 @@ RSpec.describe AzdSupport::Configuration do
 
     it "overlays stored values on top of defaults" do
       config.set("AZURE_ENV_NAME", "staging")
-      config.set("STORAGE_ACCOUNT_NAME", "sttest")
+      config.set("DECISION_DEPLOYMENT_NAME", "msft-decision-1")
       hash = config.to_env_hash
       expect(hash["AZURE_ENV_NAME"]).to eq("staging")
-      expect(hash["STORAGE_ACCOUNT_NAME"]).to eq("sttest")
+      expect(hash["DECISION_DEPLOYMENT_NAME"]).to eq("msft-decision-1")
     end
 
     it "includes dynamically set keys not in KEYS registry" do
@@ -90,15 +90,15 @@ RSpec.describe AzdSupport::Configuration do
 
   describe "#validate!" do
     it "does nothing when all keys are present" do
-      config.set("STORAGE_ACCOUNT_NAME", "stfoo")
-      config.set("AZURE_RESOURCE_GROUP", "rg-test")
-      expect { config.validate!("STORAGE_ACCOUNT_NAME", "AZURE_RESOURCE_GROUP") }.not_to raise_error
+      config.set("FOUNDRY_ENDPOINT", "https://foundry.example")
+      config.set("ENTRA_CLIENT_ID", "client-id")
+      expect { config.validate!("FOUNDRY_ENDPOINT", "ENTRA_CLIENT_ID") }.not_to raise_error
     end
 
     it "aborts with missing keys listed" do
-      config.set("STORAGE_ACCOUNT_NAME", "stfoo")
+      config.set("FOUNDRY_ENDPOINT", "https://foundry.example")
       expect {
-        config.validate!("STORAGE_ACCOUNT_NAME", "AZURE_RESOURCE_GROUP")
+        config.validate!("FOUNDRY_ENDPOINT", "ENTRA_CLIENT_ID")
       }.to raise_error(SystemExit)
     end
   end
@@ -123,15 +123,15 @@ RSpec.describe AzdSupport::Configuration do
   describe "#load_azd!" do
     it "parses KEY=VALUE lines from azd output" do
       azd_output = <<~SH
-        AZURE_RESOURCE_GROUP="rg-foo-dev"
-        STORAGE_ACCOUNT_NAME="stfoo7x2k"
+        FOUNDRY_ENDPOINT="https://the-new-foundry.services.ai.azure.com"
+        DECISION_DEPLOYMENT_NAME="msft-decision-1"
         AZURE_ENV_NAME="dev"
       SH
       allow(config).to receive(:_sh_capture).and_return(azd_output)
       config.load_azd!
 
-      expect(config["AZURE_RESOURCE_GROUP"]).to eq("rg-foo-dev")
-      expect(config["STORAGE_ACCOUNT_NAME"]).to eq("stfoo7x2k")
+      expect(config["FOUNDRY_ENDPOINT"]).to eq("https://the-new-foundry.services.ai.azure.com")
+      expect(config["DECISION_DEPLOYMENT_NAME"]).to eq("msft-decision-1")
     end
 
     it "handles single-quoted values" do

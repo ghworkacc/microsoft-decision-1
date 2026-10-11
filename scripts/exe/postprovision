@@ -4,5 +4,6 @@ require "azd_support"
 
 AzdSupport::LogAzd.tee_to_log!("postprovision")
 AzdSupport::LifecycleRunner.run("postprovision") do |runner|
-  runner.step("grant_roles_to_az_user") { AzdSupport::Provisioning::GrantRolesToAzUser.run }
+  runner.step("register_spa_app") { AzdSupport::Provisioning::RegisterSpaApp.run }
+  runner.step("write_frontend_env") { AzdSupport::Provisioning::WriteFrontendEnv.run }
 end

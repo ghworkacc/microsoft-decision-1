@@ -10,7 +10,7 @@ RSpec.describe AzdSupport::TemplateHelpers do
   let(:config) do
     c = AzdSupport::Configuration.new
     c.set("APP_NAME", "my-app")
-    c.set("STORAGE_ACCOUNT_NAME", "stfoo123")
+    c.set("ENTRA_CLIENT_ID", "client-123")
     c.set("AZURE_ENV_NAME", "prod")
     c
   end
@@ -18,11 +18,11 @@ RSpec.describe AzdSupport::TemplateHelpers do
   describe "#extract_template_vars" do
     it "finds all unique ${VAR} references in a file" do
       file = Tempfile.new(["tpl", ".yaml"])
-      file.write("name: ${APP_NAME}\nsa: ${STORAGE_ACCOUNT_NAME}\nenv: ${APP_NAME}\n")
+      file.write("name: ${APP_NAME}\nclient: ${ENTRA_CLIENT_ID}\nenv: ${APP_NAME}\n")
       file.close
 
       vars = extract_template_vars(file.path)
-      expect(vars).to contain_exactly("APP_NAME", "STORAGE_ACCOUNT_NAME")
+      expect(vars).to contain_exactly("APP_NAME", "ENTRA_CLIENT_ID")
     ensure
       file&.unlink
     end
@@ -73,14 +73,14 @@ RSpec.describe AzdSupport::TemplateHelpers do
 
     it "preserves text outside of variable references" do
       src = Tempfile.new(["src", ".txt"])
-      src.write("Hello ${APP_NAME}, your account is ${STORAGE_ACCOUNT_NAME}!")
+      src.write("Hello ${APP_NAME}, your client is ${ENTRA_CLIENT_ID}!")
       src.close
 
       dest = Tempfile.new(["dest", ".txt"])
       dest.close
 
       expand_template(src.path, dest.path, config: config)
-      expect(File.read(dest.path)).to eq("Hello my-app, your account is stfoo123!")
+      expect(File.read(dest.path)).to eq("Hello my-app, your client is client-123!")
     ensure
       src&.unlink
       dest&.unlink
@@ -90,7 +90,7 @@ RSpec.describe AzdSupport::TemplateHelpers do
   describe "#require_template_vars" do
     it "passes when all vars are present in config" do
       file = Tempfile.new(["tpl", ".yaml"])
-      file.write("app: ${APP_NAME}\nsa: ${STORAGE_ACCOUNT_NAME}\n")
+      file.write("app: ${APP_NAME}\nclient: ${ENTRA_CLIENT_ID}\n")
       file.close
 
       expect { require_template_vars(file.path, config: config) }.not_to raise_error
@@ -116,7 +116,7 @@ RSpec.describe AzdSupport::TemplateHelpers do
       empty_config = AzdSupport::Configuration.new
 
       file = Tempfile.new(["tpl", ".yaml"])
-      file.write("sa: ${STORAGE_ACCOUNT_NAME}\n")
+      file.write("client: ${ENTRA_CLIENT_ID}\n")
       file.close
 
       expect {

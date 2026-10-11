@@ -1,40 +1,41 @@
 targetScope = 'subscription'
 
-@minLength(1)
-@maxLength(64)
-@description('Name of the azd environment. Used as a prefix for resource names.')
-param environmentName string
+// azd deploys this template as a deployment stack (azure.yaml
+// infra.deploymentStacks). The stack only manages the model deployment below;
+// the shared Foundry account and its resource group are referenced, never
+// declared, so `azd down` removes just the model deployment.
+//
+// The Entra app registration lives in identity/app-registration.bicep because
+// deployment stacks don't support the Microsoft Graph extension.
 
-@description('Primary location for all resources.')
-param location string
+@description('Resource group of the existing, shared Foundry account.')
+param foundryResourceGroupName string = 'the-new-foundry'
 
-// Load abbreviations for consistent resource naming
-var abbrs = loadJsonContent('./abbreviations.json')
-var projectName = 'poc-decide-something'
-var tags = {
-  'azd-env-name': environmentName
-  'azd-project': projectName
-}
+@description('Name of the existing, shared Foundry (AIServices) account.')
+param foundryAccountName string = 'the-new-foundry'
 
-// Every resource (other than the resource group) needs this globally unique suffix
-var suffix = toLower(uniqueString(subscription().id, projectName, environmentName, location))
-var rgName = '${abbrs.resourcesResourceGroups}${projectName}-${environmentName}'
+@description('Model deployment name. Must not contain reserved words such as "Microsoft".')
+param decisionDeploymentName string = 'msft-decision-1'
 
-// Resource group for all project resources
-resource rg 'Microsoft.Resources/resourceGroups@2024-03-01' = {
-  name: substring(rgName, 0, min(length(rgName), 90)) // don't exceed 90 chars
-  location: location
-  tags: tags
-}
+@description('Model deployment SKU.')
+@allowed([
+  'GlobalStandard'
+  'DataZoneStandard'
+])
+param decisionSkuName string = 'GlobalStandard'
 
-// Example module: Storage Account
-// Replace or extend with your own modules in infra/modules/.
-module storage './modules/storage.bicep' = {
-  scope: rg
+@description('Model deployment capacity (1 unit = 1 request per 60 seconds).')
+@minValue(1)
+param decisionCapacity int = 10
+
+module decisionDeployment './modules/decision-deployment.bicep' = {
+  name: 'poc-decide-something-${decisionDeploymentName}'
+  scope: resourceGroup(foundryResourceGroupName)
   params: {
-    storageAccountName: 'default${suffix}'
-    location: location
-    tags: tags
+    accountName: foundryAccountName
+    deploymentName: decisionDeploymentName
+    skuName: decisionSkuName
+    capacity: decisionCapacity
   }
 }
 
@@ -44,6 +45,6 @@ module storage './modules/storage.bicep' = {
 // azd captures these as environment variables available to hook scripts
 // and in `azd env get-values`.
 // ---------------------------------------------------------------------------
-output AZURE_RESOURCE_GROUP string = rg.name
-output AZURE_TENANT_ID string = subscription().tenantId
-output STORAGE_ACCOUNT_NAME string = storage.outputs.storageAccountName
+output AZURE_TENANT_ID string = tenant().tenantId
+output FOUNDRY_ENDPOINT string = decisionDeployment.outputs.endpoint
+output DECISION_DEPLOYMENT_NAME string = decisionDeployment.outputs.deploymentName
