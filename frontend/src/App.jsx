@@ -32,10 +32,10 @@ export default function App() {
         setResult(null);
         setBusy(true);
         try {
-            const { body, labelsByKey } = buildDecisionRequest({ deploymentName: config.deploymentName, ...form });
+            const { body, questionsByKey } = buildDecisionRequest({ deploymentName: config.deploymentName, ...form });
             const accessToken = await getAccessToken();
             const payload = await requestDecision({ endpoint: config.foundryEndpoint, accessToken, body });
-            setResult(parseDecisionResponse(payload, labelsByKey));
+            setResult(parseDecisionResponse(payload, questionsByKey));
         } catch (e) {
             setError(e.message || String(e));
         } finally {

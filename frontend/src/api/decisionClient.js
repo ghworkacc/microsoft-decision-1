@@ -4,8 +4,6 @@
 //   POST {endpoint}/providers/microsoft/v1/systemone
 //   { model, state, questions: { <key>: { type: 'choice', instructions, criteria: { <option>: <description> } } } }
 
-export const QUESTION_KEY = 'decision';
-
 export class DecisionApiError extends Error {
     constructor(message, { status, code } = {}) {
         super(message);
@@ -31,29 +29,47 @@ export function choiceKeys(labels) {
     });
 }
 
-export function buildDecisionRequest({ deploymentName, question, choices, state }) {
-    const instructions = question.trim();
-    const labels = choices.map((choice) => choice.trim()).filter(Boolean);
-
-    if (!instructions) throw new DecisionApiError('Enter a question.');
-    if (labels.length < 2) throw new DecisionApiError('Enter at least two choices.');
+export function buildDecisionRequest({ deploymentName, questions, state }) {
+    if (!questions?.length) throw new DecisionApiError('Add at least one question.');
     if (!state.trim()) throw new DecisionApiError('Enter the state text.');
 
-    const keys = choiceKeys(labels);
-    const labelsByKey = Object.fromEntries(keys.map((key, i) => [key, labels[i]]));
+    const questionsByKey = {};
+    const requestQuestions = {};
+
+    questions.forEach((question, index) => {
+        const questionNumber = index + 1;
+        const instructions = question.instructions.trim();
+        if (!instructions) throw new DecisionApiError(`Question ${questionNumber}: Enter a question.`);
+        if (!['choice', 'noul', 'score'].includes(question.type)) {
+            throw new DecisionApiError(`Question ${questionNumber}: Choose a supported question type.`);
+        }
+
+        const labels = question.choices.map((choice) => choice.trim()).filter(Boolean);
+        if (question.type !== 'noul' && labels.length < 2) {
+            throw new DecisionApiError(`Question ${questionNumber}: Enter at least two choices.`);
+        }
+
+        const key = `question_${questionNumber}`;
+        const definition = { type: question.type, instructions };
+        if (question.type === 'choice') {
+            const keys = choiceKeys(labels);
+            definition.criteria = Object.fromEntries(keys.map((choiceKey, i) => [choiceKey, labels[i]]));
+            questionsByKey[key] = { type: question.type, labelsByKey: definition.criteria };
+        } else if (question.type === 'score') {
+            definition.criteria = labels;
+            questionsByKey[key] = { type: question.type, labels };
+        } else {
+            questionsByKey[key] = { type: question.type };
+        }
+        requestQuestions[key] = definition;
+    });
 
     return {
-        labelsByKey,
+        questionsByKey,
         body: {
             model: deploymentName,
             state,
-            questions: {
-                [QUESTION_KEY]: {
-                    type: 'choice',
-                    instructions,
-                    criteria: labelsByKey,
-                },
-            },
+            questions: requestQuestions,
         },
     };
 }
@@ -81,19 +97,49 @@ export async function requestDecision({ endpoint, accessToken, body, fetchImpl =
     return payload;
 }
 
-export function parseDecisionResponse(payload, labelsByKey) {
-    const answer = payload?.answers?.[QUESTION_KEY];
-    if (!answer) throw new DecisionApiError('The response did not include an answer.');
+export function parseDecisionResponse(payload, questionsByKey) {
+    const results = Object.entries(questionsByKey).map(([key, question]) => {
+        const answer = payload?.answers?.[key];
+        if (!answer) throw new DecisionApiError(`The response did not include an answer for ${key}.`);
 
-    const options = Object.entries(answer.probabilities ?? {})
-        .map(([key, probability]) => ({ key, label: labelsByKey[key] ?? key, probability }))
-        .sort((a, b) => b.probability - a.probability);
+        if (question.type === 'choice') {
+            const options = Object.entries(answer.probabilities ?? {})
+                .map(([optionKey, probability]) => ({
+                    key: optionKey,
+                    label: question.labelsByKey[optionKey] ?? optionKey,
+                    probability,
+                }))
+                .sort((a, b) => b.probability - a.probability);
+            return {
+                key,
+                type: question.type,
+                choiceKey: answer.choice,
+                choiceLabel: question.labelsByKey[answer.choice] ?? answer.choice,
+                confidence: answer.confidence,
+                options,
+            };
+        }
 
-    return {
-        choiceKey: answer.choice,
-        choiceLabel: labelsByKey[answer.choice] ?? answer.choice,
-        confidence: answer.confidence,
-        options,
-        usage: payload.usage ?? null,
-    };
+        if (question.type === 'noul') {
+            return { key, type: question.type, probability: answer.probability ?? answer.confidence };
+        }
+
+        const options = Object.entries(answer.probabilities ?? {})
+            .map(([level, probability]) => {
+                const index = Number(level);
+                const label = question.labels[index] ?? question.labels[level] ?? level;
+                return { key: level, label, probability };
+            });
+        const score = answer.score ?? answer.value;
+        const nearestIndex = Math.max(0, Math.min(question.labels.length - 1, Math.round(score ?? 0)));
+        return {
+            key,
+            type: question.type,
+            score,
+            scoreLabel: question.labels[nearestIndex],
+            options,
+        };
+    });
+
+    return { results, usage: payload.usage ?? null };
 }

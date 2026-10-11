@@ -9,8 +9,11 @@ import {
 
 const form = {
     deploymentName: 'msft-decision-1',
-    question: 'In what way has the customer\'s question been responded?',
-    choices: ['Answered', 'Promised to answer', ' Changed subject ', ''],
+    questions: [
+        { id: 'q1', type: 'choice', instructions: 'In what way has the customer\'s question been responded?', choices: ['Answered', 'Promised to answer', ' Changed subject ', ''] },
+        { id: 'q2', type: 'noul', instructions: 'Was a workaround provided?', choices: [] },
+        { id: 'q3', type: 'score', instructions: 'How satisfied?', choices: ['Low', 'High', ''] },
+    ],
     state: 'Customer: hi\nAgent: hello',
 };
 
@@ -18,7 +21,7 @@ const form = {
 const livePayload = {
     model: 'microsoft-decision-1',
     answers: {
-        decision: {
+        question_1: {
             choice: 'changed_subject',
             confidence: 0.545,
             probabilities: { answered: 0.29, changed_subject: 0.697, promised_to_answer: 0.0128 },
@@ -38,29 +41,32 @@ describe('choiceKeys', () => {
 
 describe('buildDecisionRequest', () => {
     it('builds a single choice question, skipping blank choices', () => {
-        const { body, labelsByKey } = buildDecisionRequest(form);
+        const { body, questionsByKey } = buildDecisionRequest(form);
 
         expect(body).toEqual({
             model: 'msft-decision-1',
             state: form.state,
             questions: {
-                decision: {
+                question_1: {
                     type: 'choice',
-                    instructions: form.question,
+                    instructions: form.questions[0].instructions,
                     criteria: {
                         answered: 'Answered',
                         promised_to_answer: 'Promised to answer',
                         changed_subject: 'Changed subject',
                     },
                 },
+                question_2: { type: 'noul', instructions: 'Was a workaround provided?' },
+                question_3: { type: 'score', instructions: 'How satisfied?', criteria: ['Low', 'High'] },
             },
         });
-        expect(labelsByKey.changed_subject).toBe('Changed subject');
+        expect(questionsByKey.question_1.labelsByKey.changed_subject).toBe('Changed subject');
+        expect(questionsByKey.question_3.labels).toEqual(['Low', 'High']);
     });
 
     it.each([
-        [{ question: ' ' }, /question/],
-        [{ choices: ['Only one', ''] }, /two choices/],
+        [{ questions: [{ ...form.questions[0], instructions: ' ' }] }, /Question 1/],
+        [{ questions: [{ ...form.questions[0], choices: ['Only one', ''] }] }, /two choices/],
         [{ state: '' }, /state/],
     ])('validates %o', (override, message) => {
         expect(() => buildDecisionRequest({ ...form, ...override })).toThrow(message);
@@ -117,19 +123,15 @@ describe('requestDecision', () => {
 
 describe('parseDecisionResponse', () => {
     it('maps keys back to labels and sorts by probability', () => {
-        const { labelsByKey } = buildDecisionRequest(form);
-        const result = parseDecisionResponse(livePayload, labelsByKey);
+        const { questionsByKey } = buildDecisionRequest({ ...form, questions: [form.questions[0]] });
+        const result = parseDecisionResponse(livePayload, questionsByKey);
 
-        expect(result).toMatchObject({
-            choiceKey: 'changed_subject',
-            choiceLabel: 'Changed subject',
-            confidence: 0.545,
-            usage: { input_tokens: 66, output_tokens: 1 },
-        });
-        expect(result.options.map((o) => o.label)).toEqual(['Changed subject', 'Answered', 'Promised to answer']);
+        expect(result.results[0]).toMatchObject({ choiceKey: 'changed_subject', choiceLabel: 'Changed subject', confidence: 0.545 });
+        expect(result.results[0].options.map((o) => o.label)).toEqual(['Changed subject', 'Answered', 'Promised to answer']);
+        expect(result.usage).toEqual({ input_tokens: 66, output_tokens: 1 });
     });
 
     it('throws when the answer is missing', () => {
-        expect(() => parseDecisionResponse({ answers: {} }, {})).toThrow(/did not include an answer/);
+        expect(() => parseDecisionResponse({ answers: {} }, { question_1: { type: 'noul' } })).toThrow(/did not include an answer/);
     });
 });

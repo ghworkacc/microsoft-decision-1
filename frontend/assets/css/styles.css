@@ -64,6 +64,7 @@ button:disabled {
 }
 
 input[type="text"],
+select,
 textarea {
     width: 100%;
     box-sizing: border-box;
@@ -72,6 +73,52 @@ textarea {
     border: 1px solid var(--border);
     border-radius: 4px;
     background: #fff;
+}
+
+.question-editor {
+    gap: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem;
+    background: #fff;
+}
+
+.question-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    gap: 1rem;
+}
+
+.question-type {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.question-type select {
+    min-width: 9rem;
+}
+
+.choices li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.choices li input {
+    flex: 1;
+}
+
+.icon-button {
+    flex: 0 0 auto;
+    padding: 0.25rem 0.55rem;
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+.subtle-button {
+    color: var(--muted);
 }
 
 textarea {
@@ -134,6 +181,10 @@ textarea {
     padding: 1rem 1.25rem;
     border-radius: 6px;
     background: var(--accent-soft);
+}
+
+.decision-results .usage {
+    margin-top: 1.5rem;
 }
 
 .decision-result h2 {
