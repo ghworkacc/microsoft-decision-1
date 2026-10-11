@@ -5,7 +5,6 @@ import { loginRequest } from './authConfig.js';
 import { config } from './config.js';
 import { buildDecisionRequest, parseDecisionResponse, requestDecision } from './api/decisionClient.js';
 import DecisionForm from './components/DecisionForm.jsx';
-import DecisionResult from './components/DecisionResult.jsx';
 
 export default function App() {
     const { instance, accounts, inProgress } = useMsal();
@@ -72,9 +71,7 @@ export default function App() {
                 </UnauthenticatedTemplate>
 
                 <AuthenticatedTemplate>
-                    <DecisionForm onSubmit={handleSubmit} busy={busy} />
-                    {error && <p className="error" role="alert">{error}</p>}
-                    {result && <DecisionResult result={result} />}
+                    <DecisionForm onSubmit={handleSubmit} busy={busy} error={error} result={result} />
                 </AuthenticatedTemplate>
             </main>
         </div>

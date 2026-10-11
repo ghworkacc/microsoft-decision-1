@@ -14,5 +14,10 @@ function ResultCard({ result }) {
 }
 
 export default function DecisionResult({ result }) {
-    return <div className="decision-results">{result.results.map((item) => <ResultCard key={item.key} result={item} />)}{result.usage && <p className="usage">Tokens: {result.usage.input_tokens} in / {result.usage.output_tokens} out</p>}</div>;
+    return (<><div className="decision-results">
+        {result.results.map((item) => <ResultCard key={item.key} result={item} />)}
+        {result.usage && <p className="usage">
+            Tokens: {result.usage.input_tokens} in / {result.usage.output_tokens} out
+        </p>}
+    </div></>);
 }
