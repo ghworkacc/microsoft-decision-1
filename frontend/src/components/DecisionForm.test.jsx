@@ -78,6 +78,7 @@ describe('DecisionForm', () => {
                 {
                     key: 'question_1',
                     type: 'choice',
+                    question: 'In what way has the customer been helped?',
                     choiceLabel: 'Answered',
                     choiceKey: 'answered',
                     confidence: 0.9,
@@ -90,6 +91,7 @@ describe('DecisionForm', () => {
             <DecisionForm onSubmit={() => {}} result={result} onDismissResult={onDismissResult} />,
         );
 
+        expect(screen.getByRole('heading', { name: /In what way has the customer been helped/ })).toBeTruthy();
         await user.click(screen.getByRole('button', { name: 'Close results' }));
         expect(onDismissResult).toHaveBeenCalledOnce();
     });

@@ -23,6 +23,12 @@ export const DEMO_QUESTIONS = [
         instructions: 'How satisfied is the customer likely to be?',
         choices: ['Very dissatisfied', 'Dissatisfied', 'Neutral', 'Satisfied', 'Very satisfied'],
     },
+    {
+        id: 'question-4',
+        type: 'score',
+        instructions: 'How satisfied is the customer likely to be?',
+        choices: ['Dissatisfied', 'Satisfied'],
+    },
 ];
 
 export const DEMO_STATE = [

@@ -153,6 +153,7 @@ describe('parseDecisionResponse', () => {
         const result = parseDecisionResponse(livePayload, questionsByKey);
 
         expect(result.results[0]).toMatchObject({
+            question: form.questions[0].instructions,
             choiceKey: 'changed_subject',
             choiceLabel: 'Changed subject',
             confidence: 0.545,

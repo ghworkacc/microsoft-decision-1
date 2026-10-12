@@ -62,12 +62,16 @@ export function buildDecisionRequest({ deploymentName, questions, state }) {
             definition.criteria = Object.fromEntries(
                 keys.map((choiceKey, i) => [choiceKey, labels[i]]),
             );
-            questionsByKey[key] = { type: question.type, labelsByKey: definition.criteria };
+            questionsByKey[key] = {
+                type: question.type,
+                question: instructions,
+                labelsByKey: definition.criteria,
+            };
         } else if (question.type === 'score') {
             definition.criteria = labels;
-            questionsByKey[key] = { type: question.type, labels };
+            questionsByKey[key] = { type: question.type, question: instructions, labels };
         } else {
-            questionsByKey[key] = { type: question.type };
+            questionsByKey[key] = { type: question.type, question: instructions };
         }
         requestQuestions[key] = definition;
     });
@@ -122,6 +126,7 @@ export function parseDecisionResponse(payload, questionsByKey) {
             return {
                 key,
                 type: question.type,
+                question: question.question,
                 choiceKey: answer.choice,
                 choiceLabel: question.labelsByKey[answer.choice] ?? answer.choice,
                 confidence: answer.confidence,
@@ -133,6 +138,7 @@ export function parseDecisionResponse(payload, questionsByKey) {
             return {
                 key,
                 type: question.type,
+                question: question.question,
                 confidence: answer.probability ?? answer.confidence ?? answer.noul,
             };
         }
@@ -150,6 +156,7 @@ export function parseDecisionResponse(payload, questionsByKey) {
         return {
             key,
             type: question.type,
+            question: question.question,
             score,
             scoreLabel: question.labels[nearestIndex],
             options,

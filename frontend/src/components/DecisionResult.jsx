@@ -22,7 +22,8 @@ function ResultChoice({ number, result }) {
     return (
         <section className="decision-result" aria-live="polite">
             <h2>
-                Question {number}: <span className="choice">{result.choiceLabel}</span>
+                {result.question ?? `Question ${number}`}:{' '}
+                <span className="choice">{result.choiceLabel}</span>
             </h2>
             <p className="confidence">Confidence {percent(result.confidence)}</p>
             <ProbabilityList options={result.options} chosenKey={result.choiceKey} />
@@ -36,10 +37,7 @@ function ResultNoul({ number, result }) {
 
     return (
         <section className="decision-result" aria-live="polite">
-            <h2>Question {number}: </h2>
-            <p className="confidence">
-                {answerLabel} probability {percent(answerProbability)}
-            </p>
+            <h2>{result.question ?? `Question ${number}`}</h2>
             <ProbabilityList
                 options={[
                     {
@@ -57,7 +55,8 @@ function ResultScore({ number, result }) {
     return (
         <section className="decision-result" aria-live="polite">
             <h2>
-                Question {number}: <span className="choice">{result.scoreLabel}</span>
+                {result.question ?? `Question ${number}`}:{' '}
+                <span className="choice">{result.scoreLabel}</span>
             </h2>
             <p className="confidence">Score {result.score?.toFixed?.(2) ?? result.score}</p>
             <ProbabilityList options={result.options} />
