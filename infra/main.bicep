@@ -49,7 +49,9 @@ param anonymousCorsOrigins array = [
 param rateLimitPerMinute int = 5
 
 var abbrs = loadJsonContent('abbreviations.json')
-var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
+// The project name keeps this token distinct from other azd projects that use
+// the same environment name and location in this subscription.
+var resourceToken = toLower(uniqueString(subscription().id, 'poc-decide-something', environmentName, location))
 var tags = {
   'azd-env-name': environmentName
 }

@@ -166,6 +166,24 @@ RSpec.describe AzdSupport::Configuration do
       config.load_azd!
       expect(config["KEY"]).to eq("value")
     end
+
+    it "writes missing registered defaults to azd without overwriting values" do
+      allow(config).to receive(:_sh_capture).and_return(
+        "ANONYMOUS_MODE=\"true\"\n",
+        ""
+      )
+
+      config.ensure_azd_defaults!
+
+      expect(config["ANONYMOUS_MODE"]).to eq("true")
+      expect(config["DECISION_CAPACITY"]).to eq("10")
+      expect(config).to have_received(:_sh_capture).with(
+        "azd env set DECISION_CAPACITY 10"
+      )
+      expect(config).not_to have_received(:_sh_capture).with(
+        "azd env set ANONYMOUS_MODE false"
+      )
+    end
   end
 
   describe "#load_env!" do

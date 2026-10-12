@@ -153,6 +153,7 @@ poc-decide-something/
 Hook scripts live under `scripts/` as a Ruby gem. See [scripts/README.md](scripts/README.md) for how to add new hook logic.
 
 - `preprovision`: checks tools, logins and the `deployment.stacks` alpha flag.
+- `preprovision`: also initializes missing deployment settings in the active azd environment; existing `azd env set` values are preserved.
 - `postprovision`: deploys the app registration, then writes `frontend/.env.local`.
 - `predown`: stops `azd down` if deployment stacks are off. Without stacks, azd would delete the shared resource group.
 - `postdown`: deletes the app registration.

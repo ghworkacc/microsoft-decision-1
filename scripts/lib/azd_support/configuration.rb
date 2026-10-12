@@ -1,4 +1,5 @@
 require "open3"
+require "shellwords"
 
 module AzdSupport
   # Centralized configuration store for azd hook scripts.
@@ -27,8 +28,11 @@ module AzdSupport
       # --- azd infrastructure outputs ---
       "AZURE_ENV_NAME"           => { source: :azd, default: "dev" },
       "AZURE_TENANT_ID"          => { source: :azd },
+      "AZURE_LOCATION"           => { source: :azd, default: "eastus2" },
       "FOUNDRY_ENDPOINT"         => { source: :azd },
       "DECISION_DEPLOYMENT_NAME" => { source: :azd },
+      "DECISION_CAPACITY"        => { source: :azd, default: "10" },
+      "SPA_REDIRECT_URIS"        => { source: :azd, default: "http://localhost:5173,https://ghworkacc.github.io/microsoft-decision-1-example/" },
       "AZURE_RESOURCE_GROUP"     => { source: :azd },
       "ANONYMOUS_FUNCTION_APP_NAME" => { source: :azd },
       "DECISION_PROXY_URL"       => { source: :azd, default: "" },
@@ -135,6 +139,22 @@ module AzdSupport
       raw = _sh_capture("azd env get-values#{env_flag} 2>/dev/null", allow_failure: true)
       _parse_shell_exports(raw)
       @sources << :azd
+    end
+
+    # Materialize registered azd defaults before Bicep runs. This keeps
+    # main.bicepparam and postprovision template expansion on the same azd
+    # environment, while preserving any value the operator already set.
+    def ensure_azd_defaults!
+      load_azd! unless @sources.include?(:azd)
+
+      KEYS.each do |key, spec|
+        next unless spec[:source] == :azd && spec.key?(:default)
+        next if spec[:default].to_s.empty? || !@store[key].to_s.empty?
+
+        _sh_capture("azd env set #{Shellwords.escape(key)} #{Shellwords.escape(spec[:default].to_s)}")
+        @store[key] = spec[:default].to_s
+      end
+      @sources << :azd_defaults
     end
 
     # Load keys with source: :env from process environment variables.
