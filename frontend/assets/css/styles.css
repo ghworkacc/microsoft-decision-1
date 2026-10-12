@@ -1,22 +1,24 @@
 :root {
-    --accent: #0f6cbd;
-    --accent-soft: #71a2d9;
-    --border: #333;
-    --text: #242424;
-    --muted: #616161;
+    --accent: #0d5ca1;
+    --accent-soft: #214b7b;
+    --border: #7b7265;
+    --text: #e8e6e3;
+    --muted: #aba498;
     --error: #b10e1c;
-    --background: #ccc;
+    --wrap-background: #181a1b;
+    --background: #35393b;
     font-family:
         'Segoe UI',
         system-ui,
         -apple-system,
         sans-serif;
     color: var(--text);
-    background: var(--background);
+    background: var(--wrap-background);
 }
 
 body {
     margin: 0;
+    color: var(--text);
 }
 
 .app {
@@ -94,7 +96,7 @@ input[type='text'].question-input:focus-visible {
 
 .sample-option.active {
     border-color: var(--accent);
-    color: var(--accent);
+    color: var(--text);
     font-weight: 600;
 }
 
@@ -131,13 +133,14 @@ button {
     border: 1px solid var(--border);
     border-radius: 4px;
     background: var(--background);
+    color: var(--text);
     cursor: pointer;
 }
 
 button.primary {
     background: var(--accent);
     border-color: var(--accent);
-    color: var(--background);
+    color: var(--text);
 }
 
 button:disabled {
@@ -171,6 +174,7 @@ textarea {
     border: 1px solid var(--border);
     border-radius: 4px;
     background: var(--background);
+    color: var(--text);
 }
 
 .question-editor {
