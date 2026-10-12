@@ -4,6 +4,9 @@ require "azd_support"
 
 AzdSupport::LogAzd.tee_to_log!("preprovision")
 AzdSupport::LifecycleRunner.run("preprovision") do |runner|
-  runner.step("ensure_azd_defaults") { AzdSupport::Provisioning::EnsureAzdDefaults.run }
+  config = runner.step("ensure_azd_defaults") { AzdSupport::Provisioning::EnsureAzdDefaults.run }
+  runner.step("validate_foundry_resource_group") do
+    config.validate!("FOUNDRY_RESOURCE_GROUP_NAME")
+  end
   runner.step("validate_local_environment") { AzdSupport::Validation::LocalEnvironment.run }
 end

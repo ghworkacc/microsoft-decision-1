@@ -18,6 +18,10 @@ RSpec.describe AzdSupport::Configuration do
       expect(config["AZURE_ENV_NAME"]).to eq("dev")
     end
 
+    it "does not default the shared Foundry resource group" do
+      expect(config["FOUNDRY_RESOURCE_GROUP_NAME"]).to be_nil
+    end
+
     it "prefers stored value over default" do
       config.set("AZURE_ENV_NAME", "prod")
       expect(config["AZURE_ENV_NAME"]).to eq("prod")

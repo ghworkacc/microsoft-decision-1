@@ -10,7 +10,7 @@ targetScope = 'subscription'
 // deployment stacks don't support the Microsoft Graph extension.
 
 @description('Resource group of the existing, shared Foundry account.')
-param foundryResourceGroupName string = 'the-new-foundry'
+param foundryResourceGroupName string
 
 @description('Name of the existing, shared Foundry (AIServices) account.')
 param foundryAccountName string = 'the-new-foundry'

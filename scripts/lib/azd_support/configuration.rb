@@ -29,6 +29,7 @@ module AzdSupport
       "AZURE_ENV_NAME"           => { source: :azd, default: "dev" },
       "AZURE_TENANT_ID"          => { source: :azd },
       "AZURE_LOCATION"           => { source: :azd, default: "eastus2" },
+      "FOUNDRY_RESOURCE_GROUP_NAME" => { source: :azd },
       "FOUNDRY_ENDPOINT"         => { source: :azd },
       "DECISION_DEPLOYMENT_NAME" => { source: :azd },
       "DECISION_CAPACITY"        => { source: :azd, default: "10" },
