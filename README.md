@@ -18,7 +18,7 @@ There are two deployment modes, currently I've set it to anonymous access mode.
 This repository assumes you have an existing Foundry account you plan to deploy into.  Configure this via the azd tool.
 
 ```sh
-azd env set FOUNDRY_ENDPOINT FOUNDRY_ENDPOINT="https://EXISTING_FOUNDRY_NAME.services.ai.azure.com" 
+azd env set FOUNDRY_RESOURCE_GROUP_NAME existing-foundry-rg
 ```
 
 ```sh
@@ -32,6 +32,32 @@ pnpm install
 pnpm dev                                     # http://localhost:5173
 ```
 
+
+## Project Structure Highlights
+
+```sh
+poc-decide-something/
+├── azure.yaml                         # azd project definition (infra, deployment stack settings, hooks)
+│
+├── infra/
+│   ├── main.bicep                     # azd entry point: model deployment + anonymous proxy (deployment stack)
+│   │
+│   ├── modules/
+│   │   ├── decision-deployment.bicep  # accounts/deployments on the existing Foundry account
+│   │   └── foundry-role-assignment.bicep # Function identity -> Cognitive Services User
+│   │
+│   └── identity/
+│       ├── app-registration.bicep     # Entra SPA app registration (Graph)
+│       └── app-registration.bicepparam
+│
+├── api/                               # Trivial rate-limited anonymous proxy (Azure Function)
+│
+├── frontend/                          # React + MSAL SPA UI
+│
+└── scripts/                           # Ruby gem for azd hook lifecycle
+    ├── exe/                           # Lifecycle hooks for azd
+    └── spec/integration               # Integration tests for deployed services
+```
 
 ## Infrastructure
 
@@ -58,18 +84,7 @@ Set these with `azd env set <NAME> <value>` before `azd provision`:
 
 ### Outputs
 
-The postprovision hook writes these to the azd environment and also to `frontend/.env.local`:
-
-| azd env | Vite env |
-| --- | --- |
-| `ENTRA_CLIENT_ID` | `VITE_ENTRA_CLIENT_ID` |
-| `AZURE_TENANT_ID` | `VITE_ENTRA_TENANT_ID` |
-| `FOUNDRY_ENDPOINT` | `VITE_FOUNDRY_ENDPOINT` |
-| `DECISION_DEPLOYMENT_NAME` | `VITE_DECISION_DEPLOYMENT` |
-| `ANONYMOUS_MODE` | `VITE_ANONYMOUS_MODE` |
-| `DECISION_PROXY_URL` | `VITE_DECISION_PROXY_URL` |
-
-Provisioning also outputs `AZURE_RESOURCE_GROUP`, `ANONYMOUS_FUNCTION_APP_NAME` and `DASHBOARD_URL` (the portal dashboard).
+The postprovision hook will write various azd environment outputs to `frontend/.env.local` allowing the frontend to to run with the correct connection strings to reach the backend services.
 
 ## Anonymous mode
 
@@ -81,19 +96,9 @@ flowchart LR
     Func -. telemetry .-> AppInsights[Application Insights + dashboard]
 ```
 
-The Function app in [api/](api/) is always deployed, but it answers every request with `404 AnonymousModeDisabled` unless its `ANONYMOUS_MODE` app setting is `true`. When enabled:
+You'll find code in this repository related to enabling anonymous access to the demo.  This isn't recommended, and I'll likely need to remove it as spiders notice the demo =/
 
-- `GET /api/quota` returns `{ rateLimit: { limit, remaining, resetSeconds } }` without using up a request.
-- `POST /api/decision` takes `{ state, questions }`, counts the request against the caller's IP, and forwards it to Foundry with the Function's managed identity. The model is always the configured deployment. Every response includes `rateLimit`, plus `RateLimit-*` headers.
-- After `ANONYMOUS_RATE_LIMIT_PER_MINUTE` requests in the current minute, the proxy returns `429 RateLimited` with `Retry-After`, without calling Foundry.
-- The counters are fixed one-minute windows, stored as one Table Storage entity per SHA-256-hashed IP. Updates use ETags, so concurrent requests can't over-admit. If storage is unavailable the proxy fails closed with `503`.
-- The client IP is the rightmost `X-Forwarded-For` entry, which App Service adds. Values a client adds itself are ignored.
-- App Service CORS allows only `ANONYMOUS_CORS_ORIGINS`.
-- All access is keyless: the storage account disallows shared keys, and Application Insights requires Entra authentication.
-
-In the frontend, `VITE_ANONYMOUS_MODE=true` skips MSAL. The app shows *"N/M requests left this minute"* next to **Decide**. When the quota runs out, **Decide** opens a modal that explains the cap and counts down to the next minute. The modal closes itself at zero and refreshes the quota.
-
-To turn it on:
+To turn it on anonymous mode (for demoing purposes), run:
 
 ```sh
 azd env set ANONYMOUS_MODE true
@@ -103,43 +108,13 @@ cd frontend && pnpm run publish
 
 To turn it off, run `azd env set ANONYMOUS_MODE false` and `azd provision`. The proxy then refuses all requests, and the next build signs users in again. After code-only changes to `api/`, `azd deploy api` is enough.
 
-### Dashboard
-
-`DASHBOARD_URL` opens a shared portal dashboard (in the proxy resource group) with three Log Analytics charts over Application Insights `requests`: requests per minute by status code, requests per minute by function, and rate-limited (429) requests per minute.
-
 ## Build for Deployment
 
 ```sh
-cd frontend
-pnpm build      # minified, ready-to-serve static files in frontend/dist/
-pnpm run publish
+cd frontend && pnpm run publish
 ```
 
-Vite inlines the `VITE_*` values at build time, so build after `azd provision`. Serve `dist/` from any static host whose origin is listed in `SPA_REDIRECT_URIS`. You can check the build locally with `pnpm preview`, which serves it on the same `http://localhost:5173` origin.
-
-## Project Structure Highlights
-
-```sh
-poc-decide-something/
-├── azure.yaml                         # azd project definition (infra, deployment stack settings, hooks)
-├── infra/
-│   ├── main.bicep                     # azd entry point: model deployment + anonymous proxy (deployment stack)
-│   ├── main.bicepparam
-│   ├── bicepconfig.json               # Microsoft Graph Bicep extension
-│   ├── modules/
-│   │   ├── decision-deployment.bicep  # accounts/deployments on the existing Foundry account
-│   │   ├── anonymous-api.bicep        # Flex Consumption Function app, storage, App Insights
-│   │   ├── foundry-role-assignment.bicep # Function identity -> Cognitive Services User
-│   │   └── dashboard.bicep            # requests/minute portal dashboard
-│   └── identity/
-│       ├── app-registration.bicep     # Entra SPA app registration (Graph)
-│       └── app-registration.bicepparam
-├── api/                               # Rate-limited anonymous proxy (Azure Functions, Node 22)
-├── frontend/                          # React + MSAL SPA (see frontend/README.md)
-└── scripts/                           # Ruby gem for azd hook lifecycle
-    ├── exe/                           # Lifecycle hooks for azd
-    └── spec/integration               # Integration tests for deployed services
-```
+Vite consumes envs from `azd provision` hooks.
 
 ## Development
 
@@ -166,6 +141,10 @@ Live integration tests check behaviour against real, deployed resources (run `az
 cd scripts/ && bundle exec rake integration
 ```
 
-[scripts/spec/integration/decision_app_spec.rb](scripts/spec/integration/decision_app_spec.rb) builds the frontend, serves `dist/` with `vite preview`, and checks the page, the bundle's azd-provided config, the app registration and Foundry CORS. It then calls the decision API on the deployed model with an `az account get-access-token` token, used in place of the browser's MSAL sign-in.
+## Frontend
 
-[scripts/spec/integration/anonymous_api_spec.rb](scripts/spec/integration/anonymous_api_spec.rb) checks the proxy's CORS rules. If `ANONYMOUS_MODE` is not `true`, it checks that the proxy refuses requests. If it is `true`, it uses up the per-minute quota (up to `ANONYMOUS_RATE_LIMIT_PER_MINUTE` model calls), then checks for the `429` and that a forged `X-Forwarded-For` doesn't get around the limit.
+See [frontend/README.md](frontend/README.md) for details on the React SPA.
+
+## API
+
+A simple Function app proxy that forwards requests to the Foundry model when running in anonymous mode.  Always deploys, but unused when `ANONYMOUS_MODE=false`.

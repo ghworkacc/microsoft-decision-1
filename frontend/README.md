@@ -39,13 +39,14 @@ This writes minified, ready-to-serve static files to `dist/`. The `VITE_*` value
 
 ## Publish to GitHub Pages
 
-```
+GitHub Pages is my favorite static web host. Read about GitHub Pages [here](https://docs.github.com/en/pages/getting-started-with-github-pages/about-github-pages). Or use `pnpm run build` and deploy `dist/` to your own favorite.
+
+```sh
+# This will need rework if you choose to deploy
 pnpm run publish
 ```
 
-Builds with base path `/microsoft-decision-1-example/`, copies `dist/` into `../static_repo/microsoft-decision-1-example` (on its `gh-pages` branch), commits if anything changed, and pushes `gh-pages`. The site is served at https://ghworkacc.github.io/microsoft-decision-1-example/, which must be a SPA redirect URI on the app registration (it is in the default `SPA_REDIRECT_URIS`).
-
-Use `pnpm run publish`, not `pnpm publish` — the latter is pnpm's built-in npm-registry command.
+Use `pnpm run publish`
 
 ## Layout
 
@@ -55,9 +56,14 @@ src/
 ├── App.jsx                   # sign in/out, token acquisition, submit flow
 ├── authConfig.js             # MSAL config, Foundry scope
 ├── config.js                 # VITE_* settings
+|
 ├── api/decisionClient.js     # request builder, fetch, response parser
+|
+├── assets/attachments/       # Demo images
+|
+├── samples/                  # Demo sample questions and choices
+|
 ├── state/decisionForm.js     # form reducer + demo defaults
-└── components/
-    ├── DecisionForm.jsx      # question, editable choices, add/clear, state
-    └── DecisionResult.jsx    # chosen option, confidence, probability bars
+|
+└── components/               # UI components
 ```
