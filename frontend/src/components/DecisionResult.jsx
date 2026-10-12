@@ -67,10 +67,18 @@ function ResultCard({ result }) {
     return <ResultScore number={number} result={result} />;
 }
 
-export default function DecisionResult({ result }) {
+export default function DecisionResult({ result, onClose }) {
     return (
         <>
             <div className="decision-results">
+                <button
+                    type="button"
+                    className="icon-button results-close"
+                    aria-label="Close results"
+                    onClick={onClose}
+                >
+                    x
+                </button>
                 {result.results.map((item) => (
                     <ResultCard key={item.key} result={item} />
                 ))}

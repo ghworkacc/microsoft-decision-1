@@ -183,6 +183,16 @@ textarea {
     background: var(--accent-soft);
 }
 
+.decision-results {
+    position: relative;
+}
+
+.results-close {
+    position: absolute;
+    top: 0.4rem;
+    right: 0;
+}
+
 .decision-results .usage {
     margin-top: 1.5rem;
 }

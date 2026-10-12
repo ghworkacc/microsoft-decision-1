@@ -92,6 +92,7 @@ export default function App() {
                         busy={busy}
                         error={error}
                         result={result}
+                        onDismissResult={() => setResult(null)}
                     />
                 </AuthenticatedTemplate>
             </main>

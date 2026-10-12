@@ -69,4 +69,28 @@ describe('DecisionForm', () => {
         render(<DecisionForm onSubmit={() => {}} busy />);
         expect(screen.getByRole('button', { name: 'Deciding…' }).disabled).toBe(true);
     });
+
+    it('dismisses results', async () => {
+        const user = userEvent.setup();
+        const onDismissResult = vi.fn();
+        const result = {
+            results: [
+                {
+                    key: 'question_1',
+                    type: 'choice',
+                    choiceLabel: 'Answered',
+                    choiceKey: 'answered',
+                    confidence: 0.9,
+                    options: [{ key: 'answered', label: 'Answered', probability: 0.9 }],
+                },
+            ],
+        };
+
+        render(
+            <DecisionForm onSubmit={() => {}} result={result} onDismissResult={onDismissResult} />,
+        );
+
+        await user.click(screen.getByRole('button', { name: 'Close results' }));
+        expect(onDismissResult).toHaveBeenCalledOnce();
+    });
 });

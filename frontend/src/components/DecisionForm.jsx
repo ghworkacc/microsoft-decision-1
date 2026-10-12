@@ -7,7 +7,13 @@ import StateEntry from './StateEntry.jsx';
 
 export const typeLabels = { choice: 'Choice', noul: 'Yes / no', score: 'Score' };
 
-export default function DecisionForm({ onSubmit, busy = false, error = null, result = null }) {
+export default function DecisionForm({
+    onSubmit,
+    busy = false,
+    error = null,
+    result = null,
+    onDismissResult = () => {},
+}) {
     const [form, dispatch] = useReducer(decisionFormReducer, initialFormState);
     function handleSubmit(event) {
         event.preventDefault();
@@ -29,7 +35,7 @@ export default function DecisionForm({ onSubmit, busy = false, error = null, res
                         {error}
                     </p>
                 )}
-                {result && <DecisionResult result={result} />}
+                {result && <DecisionResult result={result} onClose={onDismissResult} />}
 
                 {form.questions.map((question, index) => (
                     <QuestionEditor
