@@ -5,7 +5,21 @@ A React single-page app for **Microsoft-Decision-1**, using its "System 1" API o
 There are two deployment modes, currently I've set it to anonymous access mode.
 
 
+## Requirements
+
+- [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli)
+- [Azure Developer CLI (azd)](https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd), with the `deployment.stacks` alpha feature enabled
+- [Ruby](https://www.ruby-lang.org/en/documentation/installation/) (for hook scripts)
+- [Node.js](https://nodejs.org/en/download) and [pnpm](https://pnpm.io/installation)
+
+
 ## Quick Start
+
+This repository assumes you have an existing Foundry account you plan to deploy into.  Configure this via the azd tool.
+
+```sh
+azd env set FOUNDRY_ENDPOINT FOUNDRY_ENDPOINT="https://EXISTING_FOUNDRY_NAME.services.ai.azure.com" 
+```
 
 ```sh
 azd config set alpha.deployment.stacks on   # required, see "Infrastructure" below
@@ -18,33 +32,17 @@ pnpm install
 pnpm dev                                     # http://localhost:5173
 ```
 
-## Prerequisites
-
-- [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli)
-- [Azure Developer CLI (azd)](https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd), with the `deployment.stacks` alpha feature enabled
-- [Ruby](https://www.ruby-lang.org/en/documentation/installation/) (for hook scripts)
-- [Node.js](https://nodejs.org/en/download) and [pnpm](https://pnpm.io/installation)
-- Permission to create model deployments on the `the-new-foundry` account and to create Entra app registrations
-
-The `preprovision` hook checks all of these.
 
 ## Infrastructure
 
 Everything is defined in Bicep. The Foundry account `the-new-foundry` (resource group `the-new-foundry`) is shared and already exists. It is only ever referenced, never declared.
 
 | What | Where | Deployed by |
-| --- | --- | --- |
+| ---  | ---   | ---         |
 | Model deployment `msft-decision-1` (Microsoft-Decision-1 v1, `GlobalStandard`) | [infra/main.bicep](infra/main.bicep), [infra/modules/decision-deployment.bicep](infra/modules/decision-deployment.bicep) | azd, as a deployment stack |
 | Entra app registration (SPA redirect URIs, Cognitive Services `user_impersonation`) | [infra/identity/app-registration.bicep](infra/identity/app-registration.bicep) | the `postprovision` hook (`az deployment sub create`) |
 | Resource group `rg-poc-decide-something-<env>` with the anonymous proxy: Function app (Flex Consumption, Node 22), storage, Application Insights, Log Analytics, dashboard | [infra/modules/anonymous-api.bicep](infra/modules/anonymous-api.bicep), [infra/modules/dashboard.bicep](infra/modules/dashboard.bicep) | azd, as a deployment stack |
 | *Cognitive Services User* on the Foundry account for the Function's managed identity | [infra/modules/foundry-role-assignment.bicep](infra/modules/foundry-role-assignment.bicep) | azd, as a deployment stack |
-
-Why the split:
-
-- **Deployment stacks keep `azd down` safe.** Without stacks, `azd down` deletes *every resource group* that a deployment touched, and that would include the shared `the-new-foundry` group. With stacks (`actionOnUnmanage: resources delete, resourceGroups delete` in [azure.yaml](azure.yaml)), `azd down` deletes only what the stack manages: the `msft-decision-1` deployment, the proxy's role assignment and the `rg-poc-decide-something-<env>` resource group. The shared group is only referenced, so the stack never manages it.
-- **Deployment stacks don't support the Microsoft Graph Bicep extension.** azd's stacks flag applies to every Bicep deployment it makes, so the app registration is deployed as a regular subscription deployment from the hook. The `postdown` hook deletes it again.
-
-The deployment name avoids the word "Microsoft" because azd rejects deployment names that contain reserved words.
 
 ### Settings
 

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import * as supportJudge from '../samples/support_judge/index.js';
 import * as keepTalking from '../samples/keep_talking/index.js';
-import { config } from '../config.js';
 
 const samples = [supportJudge, keepTalking];
 const attachmentUrls = import.meta.glob('../../assets/attachments/*.{png,jpg,jpeg,gif,webp}', {
