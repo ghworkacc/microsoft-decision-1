@@ -116,6 +116,10 @@ button:disabled {
     cursor: default;
 }
 
+.state-entry {
+    field-sizing: content;
+}
+
 input[type="text"],
 select,
 textarea {

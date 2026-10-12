@@ -1,4 +1,4 @@
-import * as supportJudge from '../sample/support_judge/index.js';
+import * as supportJudge from '../samples/support_judge/index.js';
 
 export const { DEMO_QUESTION, DEMO_CHOICES, DEMO_QUESTIONS, DEMO_STATE } = supportJudge;
 

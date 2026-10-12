@@ -3,7 +3,7 @@ export default function StateEntry({ state, dispatch }) {
     return (
         <label className="field">
             <span className="field-label">State</span>
-            <textarea rows={8} value={state} onChange={handleChange} />
+            <textarea className="state-entry" rows={8} value={state} onChange={handleChange} />
         </label>
     );
 }

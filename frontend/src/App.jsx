@@ -9,8 +9,8 @@ import {
     requestDecision,
 } from './api/decisionClient.js';
 import DecisionForm from './components/DecisionForm.jsx';
-import * as supportJudge from './sample/support_judge/index.js';
-import * as keepTalking from './sample/keep_talking/index.js';
+import * as supportJudge from './samples/support_judge/index.js';
+import * as keepTalking from './samples/keep_talking/index.js';
 
 const samples = [supportJudge, keepTalking];
 
