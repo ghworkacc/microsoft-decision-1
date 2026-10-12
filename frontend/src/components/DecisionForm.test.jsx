@@ -85,6 +85,7 @@ describe('DecisionForm', () => {
                     options: [{ key: 'answered', label: 'Answered', probability: 0.9 }],
                 },
             ],
+            usage: { input_tokens: 10, output_tokens: 1 },
         };
 
         render(

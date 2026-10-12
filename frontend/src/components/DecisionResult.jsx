@@ -1,5 +1,5 @@
 function percent(value) {
-    return `${((value ?? 0) * 100).toFixed(1)}%`;
+    return `${(value * 100).toFixed(1)}%`;
 }
 
 function ProbabilityList({ options, chosenKey }) {
@@ -18,12 +18,11 @@ function ProbabilityList({ options, chosenKey }) {
     );
 }
 
-function ResultChoice({ number, result }) {
+function ResultChoice({ result }) {
     return (
         <section className="decision-result" aria-live="polite">
             <h2>
-                {result.question ?? `Question ${number}`}:{' '}
-                <span className="choice">{result.choiceLabel}</span>
+                {result.question}: <span className="choice">{result.choiceLabel}</span>
             </h2>
             <p className="confidence">Confidence {percent(result.confidence)}</p>
             <ProbabilityList options={result.options} chosenKey={result.choiceKey} />
@@ -31,13 +30,13 @@ function ResultChoice({ number, result }) {
     );
 }
 
-function ResultNoul({ number, result }) {
+function ResultNoul({ result }) {
     const answerLabel = result.confidence >= 0.5 ? 'Yes' : 'No';
     const answerProbability = result.confidence >= 0.5 ? result.confidence : 1 - result.confidence;
 
     return (
         <section className="decision-result" aria-live="polite">
-            <h2>{result.question ?? `Question ${number}`}</h2>
+            <h2>{result.question}</h2>
             <ProbabilityList
                 options={[
                     {
@@ -51,24 +50,22 @@ function ResultNoul({ number, result }) {
     );
 }
 
-function ResultScore({ number, result }) {
+function ResultScore({ result }) {
     return (
         <section className="decision-result" aria-live="polite">
             <h2>
-                {result.question ?? `Question ${number}`}:{' '}
-                <span className="choice">{result.scoreLabel}</span>
+                {result.question}: <span className="choice">{result.scoreLabel}</span>
             </h2>
-            <p className="confidence">Score {result.score?.toFixed?.(2) ?? result.score}</p>
+            <p className="confidence">Score {result.score.toFixed(2)}</p>
             <ProbabilityList options={result.options} />
         </section>
     );
 }
 
 function ResultCard({ result }) {
-    const number = result.key.replace('question_', '');
-    if (result.type === 'choice') return <ResultChoice number={number} result={result} />;
-    if (result.type === 'noul') return <ResultNoul number={number} result={result} />;
-    return <ResultScore number={number} result={result} />;
+    if (result.type === 'choice') return <ResultChoice result={result} />;
+    if (result.type === 'noul') return <ResultNoul result={result} />;
+    return <ResultScore result={result} />;
 }
 
 export default function DecisionResult({ result, onClose }) {
@@ -86,11 +83,9 @@ export default function DecisionResult({ result, onClose }) {
                 {result.results.map((item) => (
                     <ResultCard key={item.key} result={item} />
                 ))}
-                {result.usage && (
-                    <p className="usage">
-                        Tokens: {result.usage.input_tokens} in / {result.usage.output_tokens} out
-                    </p>
-                )}
+                <p className="usage">
+                    Tokens: {result.usage.input_tokens} in / {result.usage.output_tokens} out
+                </p>
             </div>
         </>
     );

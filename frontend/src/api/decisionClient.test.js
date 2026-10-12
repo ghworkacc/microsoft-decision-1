@@ -22,7 +22,6 @@ const form = {
     state: 'Customer: hi\nAgent: hello',
 };
 
-// Response captured from the live API.
 const livePayload = {
     model: 'microsoft-decision-1',
     answers: {
@@ -32,9 +31,21 @@ const livePayload = {
             probabilities: { answered: 0.29, changed_subject: 0.697, promised_to_answer: 0.0128 },
             type: 'choice',
         },
+        question_2: { noul: 0.9988304897893894, type: 'noul' },
+        question_3: {
+            confidence: 0.5098299847632095,
+            legend: { 0: 'Low', 1: 'High' },
+            probabilities: { 0: 0.24508500761839527, 1: 0.7549149923816048 },
+            score: 0.7549149923816048,
+            type: 'score',
+        },
     },
-    usage: { input_tokens: 66, output_tokens: 1 },
+    usage: { input_tokens: 215, output_tokens: 4 },
 };
+
+function withAnswer(key, answer) {
+    return { ...livePayload, answers: { ...livePayload.answers, [key]: answer } };
+}
 
 describe('choiceKeys', () => {
     it('slugifies labels and keeps them unique', () => {
@@ -110,8 +121,14 @@ describe('requestDecision', () => {
     it('surfaces the API error envelope', async () => {
         const fetchImpl = vi.fn().mockResolvedValue({
             ok: false,
-            status: 422,
-            json: async () => ({ error: { code: 'invalid_question', message: 'Bad question' } }),
+            status: 404,
+            json: async () => ({
+                error: {
+                    code: 'DeploymentNotFound',
+                    message: 'The API deployment nope does not exist.',
+                    details: 'The API deployment nope does not exist.',
+                },
+            }),
         });
 
         const error = await requestDecision({
@@ -123,33 +140,17 @@ describe('requestDecision', () => {
 
         expect(error).toBeInstanceOf(DecisionApiError);
         expect(error).toMatchObject({
-            message: 'Bad question',
-            status: 422,
-            code: 'invalid_question',
+            message: 'The API deployment nope does not exist.',
+            status: 404,
+            code: 'DeploymentNotFound',
         });
-    });
-
-    it('falls back to the HTTP status when the body is not JSON', async () => {
-        const fetchImpl = vi.fn().mockResolvedValue({
-            ok: false,
-            status: 401,
-            json: async () => {
-                throw new SyntaxError('not json');
-            },
-        });
-
-        await expect(
-            requestDecision({ endpoint: 'e', accessToken: 't', body: {}, fetchImpl }),
-        ).rejects.toThrow('Request failed with HTTP 401.');
     });
 });
 
 describe('parseDecisionResponse', () => {
-    it('maps keys back to labels and sorts by probability', () => {
-        const { questionsByKey } = buildDecisionRequest({
-            ...form,
-            questions: [form.questions[0]],
-        });
+    const { questionsByKey } = buildDecisionRequest(form);
+
+    it('maps choice keys back to labels and sorts by probability', () => {
         const result = parseDecisionResponse(livePayload, questionsByKey);
 
         expect(result.results[0]).toMatchObject({
@@ -163,12 +164,82 @@ describe('parseDecisionResponse', () => {
             'Answered',
             'Promised to answer',
         ]);
-        expect(result.usage).toEqual({ input_tokens: 66, output_tokens: 1 });
+        expect(result.usage).toEqual({ input_tokens: 215, output_tokens: 4 });
+    });
+
+    it('reads the noul probability', () => {
+        const result = parseDecisionResponse(livePayload, questionsByKey);
+
+        expect(result.results[1]).toMatchObject({ type: 'noul', confidence: 0.9988304897893894 });
+    });
+
+    it('maps score levels to labels in scale order', () => {
+        const result = parseDecisionResponse(livePayload, questionsByKey);
+
+        expect(result.results[2]).toMatchObject({
+            type: 'score',
+            score: 0.7549149923816048,
+            scoreLabel: 'High',
+            options: [
+                { key: '0', label: 'Low', probability: 0.24508500761839527 },
+                { key: '1', label: 'High', probability: 0.7549149923816048 },
+            ],
+        });
     });
 
     it('throws when the answer is missing', () => {
-        expect(() =>
-            parseDecisionResponse({ answers: {} }, { question_1: { type: 'noul' } }),
-        ).toThrow(/did not include an answer/);
+        const { question_2, ...answers } = livePayload.answers;
+        expect(question_2).toBeDefined();
+        expect(() => parseDecisionResponse({ ...livePayload, answers }, questionsByKey)).toThrow(
+            /did not include an answer for question_2/,
+        );
+    });
+
+    it.each([
+        ['missing answers', { ...livePayload, answers: undefined }, /response: missing answers/],
+        ['missing usage', { ...livePayload, usage: undefined }, /response: missing token usage/],
+        [
+            'a mismatched answer type',
+            withAnswer('question_2', { probability: 0.9, type: 'choice' }),
+            /question_2: expected type noul, got choice/,
+        ],
+        [
+            'a noul answer without the noul field',
+            withAnswer('question_2', { probability: 0.9, type: 'noul' }),
+            /question_2: expected a noul probability/,
+        ],
+        [
+            'a choice outside the criteria',
+            withAnswer('question_1', { ...livePayload.answers.question_1, choice: 'other' }),
+            /question_1: unknown choice other/,
+        ],
+        [
+            'choice probabilities that do not match the criteria',
+            withAnswer('question_1', {
+                ...livePayload.answers.question_1,
+                probabilities: { answered: 0.5, other: 0.5 },
+            }),
+            /question_1: expected probabilities for answered, promised_to_answer, changed_subject/,
+        ],
+        [
+            'a score answer using value instead of score',
+            withAnswer('question_3', {
+                ...livePayload.answers.question_3,
+                score: undefined,
+                value: 0.75,
+            }),
+            /question_3: expected a score between 0 and 1/,
+        ],
+        [
+            'score probabilities keyed by label',
+            withAnswer('question_3', {
+                ...livePayload.answers.question_3,
+                probabilities: { Low: 0.25, High: 0.75 },
+            }),
+            /question_3: expected probabilities for 0, 1/,
+        ],
+    ])('rejects %s as an unexpected response shape', (_, payload, message) => {
+        expect(() => parseDecisionResponse(payload, questionsByKey)).toThrow(DecisionApiError);
+        expect(() => parseDecisionResponse(payload, questionsByKey)).toThrow(message);
     });
 });

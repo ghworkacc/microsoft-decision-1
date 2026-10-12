@@ -96,31 +96,72 @@ export async function requestDecision({ endpoint, accessToken, body, fetchImpl =
         body: JSON.stringify(body),
     });
 
-    const payload = await response.json().catch(() => null);
+    // Every error status returns a JSON { error: { code, message } } envelope
+    // (verified by decisionClient.int.test.js).
+    const payload = await response.json();
 
     if (!response.ok) {
-        const error = payload?.error ?? {};
-        throw new DecisionApiError(
-            error.message || `Request failed with HTTP ${response.status}.`,
-            { status: response.status, code: error.code },
-        );
+        const { code, message } = payload.error;
+        throw new DecisionApiError(message, { status: response.status, code });
     }
 
     return payload;
 }
 
+// Response contract (verified by decisionClient.int.test.js):
+//   { model, usage: { input_tokens, output_tokens }, answers: { <key>: answer } }
+//   choice: { type, choice, confidence, probabilities: { <option>: p } }
+//   noul:   { type, noul }
+//   score:  { type, score, confidence, legend: { '0': label }, probabilities: { '0': p } }
+function isObject(value) {
+    return typeof value === 'object' && value !== null;
+}
+
+function isProbability(value) {
+    return typeof value === 'number' && value >= 0 && value <= 1;
+}
+
+function unexpectedShape(key, detail) {
+    return new DecisionApiError(`Unexpected response shape for ${key}: ${detail}.`);
+}
+
+function checkProbabilities(key, probabilities, expectedKeys) {
+    const actualKeys = isObject(probabilities) ? Object.keys(probabilities) : [];
+    const matches =
+        actualKeys.length === expectedKeys.length &&
+        expectedKeys.every((k) => isProbability(probabilities[k]));
+    if (!matches) {
+        throw unexpectedShape(key, `expected probabilities for ${expectedKeys.join(', ')}`);
+    }
+}
+
 export function parseDecisionResponse(payload, questionsByKey) {
+    if (!isObject(payload.answers)) throw unexpectedShape('response', 'missing answers');
+    const { usage } = payload;
+    if (!Number.isInteger(usage?.input_tokens) || !Number.isInteger(usage?.output_tokens)) {
+        throw unexpectedShape('response', 'missing token usage');
+    }
+
     const results = Object.entries(questionsByKey).map(([key, question]) => {
-        const answer = payload?.answers?.[key];
-        if (!answer)
+        const answer = payload.answers[key];
+        if (!isObject(answer))
             throw new DecisionApiError(`The response did not include an answer for ${key}.`);
+        if (answer.type !== question.type)
+            throw unexpectedShape(key, `expected type ${question.type}, got ${answer.type}`);
 
         if (question.type === 'choice') {
-            const options = Object.entries(answer.probabilities ?? {})
-                .map(([optionKey, probability]) => ({
+            const optionKeys = Object.keys(question.labelsByKey);
+            checkProbabilities(key, answer.probabilities, optionKeys);
+            if (!optionKeys.includes(answer.choice))
+                throw unexpectedShape(key, `unknown choice ${answer.choice}`);
+            if (!isProbability(answer.confidence))
+                throw unexpectedShape(key, 'expected a confidence between 0 and 1');
+
+            const options = optionKeys
+                .map((optionKey) => ({
                     key: optionKey,
-                    label: question.labelsByKey[optionKey] ?? optionKey,
-                    probability,
+                    label: question.labelsByKey[optionKey],
+                    probability: answer.probabilities[optionKey],
                 }))
                 .sort((a, b) => b.probability - a.probability);
             return {
@@ -128,40 +169,45 @@ export function parseDecisionResponse(payload, questionsByKey) {
                 type: question.type,
                 question: question.question,
                 choiceKey: answer.choice,
-                choiceLabel: question.labelsByKey[answer.choice] ?? answer.choice,
+                choiceLabel: question.labelsByKey[answer.choice],
                 confidence: answer.confidence,
                 options,
             };
         }
 
         if (question.type === 'noul') {
+            if (!isProbability(answer.noul))
+                throw unexpectedShape(key, 'expected a noul probability between 0 and 1');
             return {
                 key,
                 type: question.type,
                 question: question.question,
-                confidence: answer.probability ?? answer.confidence ?? answer.noul,
+                confidence: answer.noul,
             };
         }
 
-        const options = Object.entries(answer.probabilities ?? {}).map(([level, probability]) => {
-            const index = Number(level);
-            const label = question.labels[index] ?? question.labels[level] ?? level;
-            return { key: level, label, probability };
-        });
-        const score = answer.score ?? answer.value;
-        const nearestIndex = Math.max(
-            0,
-            Math.min(question.labels.length - 1, Math.round(score ?? 0)),
+        const maxScore = question.labels.length - 1;
+        checkProbabilities(
+            key,
+            answer.probabilities,
+            question.labels.map((_, i) => String(i)),
         );
+        if (typeof answer.score !== 'number' || answer.score < 0 || answer.score > maxScore)
+            throw unexpectedShape(key, `expected a score between 0 and ${maxScore}`);
+
         return {
             key,
             type: question.type,
             question: question.question,
-            score,
-            scoreLabel: question.labels[nearestIndex],
-            options,
+            score: answer.score,
+            scoreLabel: question.labels[Math.round(answer.score)],
+            options: question.labels.map((label, i) => ({
+                key: String(i),
+                label,
+                probability: answer.probabilities[i],
+            })),
         };
     });
 
-    return { results, usage: payload.usage ?? null };
+    return { results, usage };
 }

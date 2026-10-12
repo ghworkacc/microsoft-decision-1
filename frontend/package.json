@@ -7,6 +7,7 @@
         "start": "vite",
         "dev": "vite",
         "test": "vitest --no-watch",
+        "integration-test": "vitest --no-watch --config vitest.int.config.js",
         "lint": "eslint .",
         "build": "vite build",
         "preview": "vite preview",

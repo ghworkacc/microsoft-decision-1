@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import { configDefaults } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 
 // The Entra app registration's SPA redirect URI is http://localhost:5173, so
@@ -16,5 +17,6 @@ export default defineConfig({
     test: {
         environment: 'jsdom',
         setupFiles: ['./src/test/setup.js'],
+        exclude: [...configDefaults.exclude, '**/*.int.test.js'],
     },
 });

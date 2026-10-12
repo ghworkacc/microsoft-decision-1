@@ -72,6 +72,7 @@ The postprovision hook writes these to the azd environment and also to `frontend
 ```sh
 cd frontend
 pnpm build      # minified, ready-to-serve static files in frontend/dist/
+pnpm run publish
 ```
 
 Vite inlines the `VITE_*` values at build time, so build after `azd provision`. Serve `dist/` from any static host whose origin is listed in `SPA_REDIRECT_URIS`. You can check the build locally with `pnpm preview`, which serves it on the same `http://localhost:5173` origin.
@@ -106,15 +107,16 @@ Hook scripts live under `scripts/` as a Ruby gem. See [scripts/README.md](script
 - `postdown`: deletes the app registration.
 
 ```sh
-cd scripts && bundle exec rspec       # hook unit tests
-cd frontend && pnpm test && pnpm lint  # frontend unit tests + lint
+cd scripts && bundle exec rspec          # hook unit tests
+cd frontend && pnpm test && pnpm lint    # frontend unit tests + lint
+cd frontend && pnpm run integration-test # frontend integration tests
 ```
 
 ## Running Integration Tests
 
 Live integration tests check behaviour against real, deployed resources (run `azd up` first). To run the integration suite:
 
-```
+```sh
 cd scripts/ && bundle exec rake integration
 ```
 
