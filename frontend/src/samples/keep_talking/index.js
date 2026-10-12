@@ -1,4 +1,4 @@
-export const name = 'keep talking';
+export const name = 'keep talking (decision unit)';
 
 export const form = {
     questions: [
@@ -11,8 +11,9 @@ export const form = {
         },
     ],
     state: [
-        'Scenario: Keep Talking and Nobody Explodes, Version 1 standard Wires module.',
-        'Only the top-left wiring puzzle from the bomb screenshot is in scope. Ignore every other module.',
+        'Scenario: Keep Talking and Nobody Explodes, Version 1',
+        '',
+        'module type: Standard Wires',
         '',
         'Observed module: there are exactly four wires, ordered from top to bottom:',
         '1. black',
@@ -22,7 +23,8 @@ export const form = {
         '',
         'Serial Number: AFC3F2',
         '',
-        'Manual: Wires can have 3-6 wires.',
+        'Manual:',
+        'Wires can have 3-6 wires.',
         'Only the one correct wire needs to be cut to disarm the module.',
         'Wire ordering begins with the first on the top.',
         '',
