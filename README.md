@@ -19,6 +19,13 @@ This repository assumes you have an existing Foundry account you plan to deploy 
 
 ```sh
 azd env set FOUNDRY_RESOURCE_GROUP_NAME existing-foundry-rg
+azd env set SPA_REDIRECT_URIS "http://localhost:5173,https://gh-handle.github.com/microsoft-decision-1-example/"
+azd env set FRONTEND_URL "https://gh-handle.github.com/microsoft-decision-1-example/"
+```
+
+Then run the following to deploy the model and the app registration, and start the frontend:
+
+
 ```
 
 ```sh

@@ -17,7 +17,6 @@ param environmentName string
 @description('SPA redirect URIs (local dev server and any production origins).')
 param spaRedirectUris array = [
   'http://localhost:5173'
-  'https://ghworkacc.github.io/microsoft-decision-1-example/'
 ]
 
 var projectName = 'poc-decide-something'
