@@ -5,9 +5,18 @@ import { config } from './config.js';
 import { requestDecision } from './api/decisionClient.js';
 import AppLayout from './components/AppLayout.jsx';
 import DecisionForm from './components/DecisionForm.jsx';
+import AnonymousApp from './AnonymousApp.jsx';
 import { useDecisionSubmit } from './hooks/useDecisionSubmit.js';
 
 export default function App() {
+    if (config.anonymousMode) {
+        return <AnonymousApp />;
+    }
+
+    return <AuthenticatedApp />;
+}
+
+function AuthenticatedApp() {
     const { instance, accounts, inProgress } = useMsal();
     const account = instance.getActiveAccount() ?? accounts[0] ?? null;
 
