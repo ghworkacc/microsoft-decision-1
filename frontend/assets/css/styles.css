@@ -43,6 +43,59 @@ body {
     margin-left: auto;
 }
 
+.sample-nav {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: #fff;
+}
+
+.sample-nav-label {
+    color: var(--muted);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.sample-options {
+    display: flex;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+}
+
+.sample-option {
+    padding: 0.35rem 0.65rem;
+    border-color: transparent;
+    border-radius: 3px;
+    color: var(--muted);
+}
+
+.sample-option:hover,
+.sample-option:focus-visible {
+    border-color: var(--border);
+}
+
+.sample-option.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 button {
     font: inherit;
     padding: 0.4rem 0.9rem;

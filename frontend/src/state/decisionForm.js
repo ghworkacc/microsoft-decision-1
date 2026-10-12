@@ -1,48 +1,15 @@
-export const DEMO_QUESTION = "In what way has the customer's question been responded?";
+import * as supportJudge from '../sample/support_judge/index.js';
 
-export const DEMO_CHOICES = ['Answered', 'Promised to answer', 'Changed subject'];
+export const { DEMO_QUESTION, DEMO_CHOICES, DEMO_QUESTIONS, DEMO_STATE } = supportJudge;
 
 export const QUESTION_TYPES = ['choice', 'noul', 'score'];
-
-export const DEMO_QUESTIONS = [
-    {
-        id: 'question-1',
-        type: 'choice',
-        instructions: DEMO_QUESTION,
-        choices: DEMO_CHOICES,
-    },
-    {
-        id: 'question-2',
-        type: 'noul',
-        instructions: 'Did the agent provide a workaround for the customer?',
-        choices: [],
-    },
-    {
-        id: 'question-3',
-        type: 'score',
-        instructions: 'How satisfied is the customer likely to be?',
-        choices: ['Very dissatisfied', 'Dissatisfied', 'Neutral', 'Satisfied', 'Very satisfied'],
-    },
-    {
-        id: 'question-4',
-        type: 'score',
-        instructions: 'How satisfied is the customer likely to be?',
-        choices: ['Dissatisfied', 'Satisfied'],
-    },
-];
-
-export const DEMO_STATE = [
-    'Customer: I\'m having trouble setting up my model deployment.  It says "error - name included a reserved word"',
-    'Agent: The default deployment unfortunately used a reserved word.  To work around the issue, you need to ' +
-        "create a custom deployment and provide it an alternative name (e.g. 'msft-decidobot-threesixtyfive').",
-].join('\n');
 
 export const initialFormState = {
     questions: DEMO_QUESTIONS,
     state: DEMO_STATE,
 };
 
-let nextQuestionId = 4;
+let nextQuestionId = 5;
 
 function newQuestion() {
     return {

@@ -9,14 +9,26 @@ import {
     requestDecision,
 } from './api/decisionClient.js';
 import DecisionForm from './components/DecisionForm.jsx';
+import * as supportJudge from './sample/support_judge/index.js';
+import * as keepTalking from './sample/keep_talking/index.js';
+
+const samples = [supportJudge, keepTalking];
 
 export default function App() {
     const { instance, accounts, inProgress } = useMsal();
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState(null);
     const [result, setResult] = useState(null);
+    const [sampleIndex, setSampleIndex] = useState(0);
 
     const account = instance.getActiveAccount() ?? accounts[0] ?? null;
+    const sample = samples[sampleIndex];
+
+    function selectSample(index) {
+        setSampleIndex(index);
+        setResult(null);
+        setError(null);
+    }
 
     async function getAccessToken() {
         try {
@@ -68,6 +80,23 @@ export default function App() {
                 </AuthenticatedTemplate>
             </header>
 
+            <nav className="sample-nav" aria-label="Sample presets">
+                <span className="sample-nav-label">Samples</span>
+                <div className="sample-options">
+                    {samples.map((item, index) => (
+                        <button
+                            key={item.name}
+                            type="button"
+                            className={`sample-option${index === sampleIndex ? ' active' : ''}`}
+                            aria-pressed={index === sampleIndex}
+                            onClick={() => selectSample(index)}
+                        >
+                            {item.name}
+                        </button>
+                    ))}
+                </div>
+            </nav>
+
             <main>
                 <UnauthenticatedTemplate>
                     <section className="sign-in">
@@ -88,7 +117,9 @@ export default function App() {
 
                 <AuthenticatedTemplate>
                     <DecisionForm
+                        key={sample.name}
                         onSubmit={handleSubmit}
+                        initialState={sample.form}
                         busy={busy}
                         error={error}
                         result={result}

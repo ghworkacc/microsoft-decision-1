@@ -3,7 +3,7 @@ import { DEMO_CHOICES, decisionFormReducer, initialFormState } from './decisionF
 
 describe('decisionFormReducer', () => {
     it('starts with the demo questions and state', () => {
-        expect(initialFormState.questions).toHaveLength(3);
+        expect(initialFormState.questions).toHaveLength(4);
         expect(initialFormState.questions[0]).toMatchObject({
             type: 'choice',
             instructions: "In what way has the customer's question been responded?",
@@ -53,13 +53,14 @@ describe('decisionFormReducer', () => {
 
     it('adds, removes and edits questions', () => {
         let next = decisionFormReducer(initialFormState, { type: 'addQuestion' });
-        expect(next.questions).toHaveLength(4);
-        const newId = next.questions[3].id;
+        expect(next.questions).toHaveLength(5);
+        const newId = next.questions[4].id;
         next = decisionFormReducer(next, { type: 'setInstructions', id: newId, value: 'Q?' });
         next = decisionFormReducer(next, { type: 'removeQuestion', id: 'question-2' });
         expect(next.questions.map((question) => question.id)).toEqual([
             'question-1',
             'question-3',
+            'question-4',
             newId,
         ]);
     });

@@ -31,9 +31,9 @@ describe('DecisionForm', () => {
         render(<DecisionForm onSubmit={() => {}} />);
 
         await user.click(screen.getByRole('button', { name: 'Add question' }));
-        expect(screen.getAllByRole('group')).toHaveLength(4);
+        expect(screen.getAllByRole('group')).toHaveLength(5);
         await user.click(screen.getAllByRole('button', { name: 'Remove question' })[3]);
-        expect(screen.getAllByRole('group')).toHaveLength(3);
+        expect(screen.getAllByRole('group')).toHaveLength(4);
     });
 
     it('hides choices for noul and restores them when switching back', async () => {
@@ -91,7 +91,9 @@ describe('DecisionForm', () => {
             <DecisionForm onSubmit={() => {}} result={result} onDismissResult={onDismissResult} />,
         );
 
-        expect(screen.getByRole('heading', { name: /In what way has the customer been helped/ })).toBeTruthy();
+        expect(
+            screen.getByRole('heading', { name: /In what way has the customer been helped/ }),
+        ).toBeTruthy();
         await user.click(screen.getByRole('button', { name: 'Close results' }));
         expect(onDismissResult).toHaveBeenCalledOnce();
     });

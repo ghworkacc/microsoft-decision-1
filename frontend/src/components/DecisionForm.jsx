@@ -8,12 +8,13 @@ export const typeLabels = { choice: 'Choice', noul: 'Yes / no', score: 'Score' }
 
 export default function DecisionForm({
     onSubmit,
+    initialState = initialFormState,
     busy = false,
     error = null,
     result = null,
     onDismissResult = () => {},
 }) {
-    const [form, dispatch] = useReducer(decisionFormReducer, initialFormState);
+    const [form, dispatch] = useReducer(decisionFormReducer, initialState);
     function handleSubmit(event) {
         event.preventDefault();
         onSubmit(form);
