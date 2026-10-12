@@ -1,0 +1,30 @@
+{
+    "name": "poc-decide-something-api",
+    "private": true,
+    "version": "0.0.0",
+    "description": "Rate-limited anonymous proxy for the decision model (Azure Functions).",
+    "type": "module",
+    "main": "src/functions/*.js",
+    "engines": {
+        "node": ">=22"
+    },
+    "scripts": {
+        "start": "func start",
+        "test": "vitest --no-watch",
+        "lint": "eslint ."
+    },
+    "dependencies": {
+        "@azure/data-tables": "^13.3.1",
+        "@azure/functions": "^4.7.0",
+        "@azure/identity": "^4.10.0"
+    },
+    "devDependencies": {
+        "@eslint/js": "^9.32.0",
+        "eslint": "^9.32.0",
+        "eslint-config-prettier": "^10.1.8",
+        "eslint-plugin-prettier": "^5.5.6",
+        "globals": "^16.3.0",
+        "prettier": "^3.9.10",
+        "vitest": "^3.2.4"
+    }
+}

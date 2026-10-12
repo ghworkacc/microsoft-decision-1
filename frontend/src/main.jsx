@@ -3,8 +3,9 @@ import { createRoot } from 'react-dom/client';
 import { EventType, PublicClientApplication } from '@azure/msal-browser';
 import { MsalProvider } from '@azure/msal-react';
 import { msalConfig } from './authConfig.js';
-import { missingConfig } from './config.js';
+import { config, missingConfig } from './config.js';
 import App from './App.jsx';
+import AnonymousApp from './AnonymousApp.jsx';
 import '../assets/css/styles.css';
 
 const root = createRoot(document.getElementById('root'));
@@ -17,6 +18,12 @@ if (missingConfig.length > 0) {
                 generate <code>frontend/.env.local</code>, then restart the dev server.
             </p>
         </div>,
+    );
+} else if (config.anonymousMode) {
+    root.render(
+        <StrictMode>
+            <AnonymousApp />
+        </StrictMode>,
     );
 } else {
     const msalInstance = new PublicClientApplication(msalConfig);

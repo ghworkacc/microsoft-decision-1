@@ -74,6 +74,14 @@ RSpec.describe AzdSupport::Configuration do
       expect(hash["AZURE_ENV_NAME"]).to eq("dev")
     end
 
+    it "defaults anonymous mode off with the documented limits" do
+      hash = config.to_env_hash
+      expect(hash["ANONYMOUS_MODE"]).to eq("false")
+      expect(hash["DECISION_PROXY_URL"]).to eq("")
+      expect(hash["ANONYMOUS_CORS_ORIGINS"]).to eq("https://ghworkacc.github.io,http://localhost:5173")
+      expect(hash["ANONYMOUS_RATE_LIMIT_PER_MINUTE"]).to eq("5")
+    end
+
     it "overlays stored values on top of defaults" do
       config.set("AZURE_ENV_NAME", "staging")
       config.set("DECISION_DEPLOYMENT_NAME", "msft-decision-1")

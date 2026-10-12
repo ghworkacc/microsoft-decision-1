@@ -8,14 +8,23 @@ infra:
   path: infra
   name: poc-decide-something # this is the linchpin that enables azd env refresh (and avoids strange azd behavior)
   # Requires `azd config set alpha.deployment.stacks on` (enforced by preprovision).
-  # The stack manages only the model deployment on the shared Foundry account,
-  # so `azd down` deletes that deployment and detaches (never deletes) resource groups.
+  # The stack manages the model deployment on the shared Foundry account plus the
+  # anonymous proxy's own resource group. `azd down` deletes those; the shared
+  # Foundry resource group is only referenced, so the stack never manages it.
   deploymentStacks:
     actionOnUnmanage:
       resources: delete
-      resourceGroups: detach
+      resourceGroups: delete
     denySettings:
       mode: none
+
+services:
+  # Rate-limited proxy for unauthenticated use. Refuses all requests unless
+  # ANONYMOUS_MODE=true at provision time.
+  api:
+    project: ./api
+    language: js
+    host: function
 
 hooks:
   preprovision:

@@ -13,6 +13,7 @@ export default function DecisionForm({
     error = null,
     result = null,
     onDismissResult = () => {},
+    submitAccessory = null,
 }) {
     const [form, dispatch] = useReducer(decisionFormReducer, initialState);
     function handleSubmit(event) {
@@ -20,15 +21,25 @@ export default function DecisionForm({
         onSubmit(form);
     }
     const decideButtonLabel = busy ? 'Deciding…' : 'Decide';
+    const decideButton = (
+        <button type="submit" className="primary" disabled={busy}>
+            {decideButtonLabel}
+        </button>
+    );
 
     return (
         <>
             <form className="decision-form" onSubmit={handleSubmit}>
                 <StateEntry state={form.state} dispatch={dispatch} />
 
-                <button type="submit" className="primary" disabled={busy}>
-                    {decideButtonLabel}
-                </button>
+                {submitAccessory ? (
+                    <div className="submit-row">
+                        {decideButton}
+                        {submitAccessory}
+                    </div>
+                ) : (
+                    decideButton
+                )}
 
                 {error && (
                     <p className="error" role="alert">

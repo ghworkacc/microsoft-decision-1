@@ -108,6 +108,69 @@ export async function requestDecision({ endpoint, accessToken, body, fetchImpl =
     return payload;
 }
 
+// Thrown by the anonymous proxy when the caller has used up this minute's quota.
+export class RateLimitError extends DecisionApiError {
+    constructor(message, { rateLimit } = {}) {
+        super(message, { status: 429, code: 'RateLimited' });
+        this.name = 'RateLimitError';
+        this.rateLimit = rateLimit;
+    }
+}
+
+function readRateLimit(payload) {
+    const rateLimit = payload?.rateLimit;
+    const valid =
+        isObject(rateLimit) &&
+        ['limit', 'remaining', 'resetSeconds'].every((k) => Number.isFinite(rateLimit[k]));
+    return valid ? rateLimit : null;
+}
+
+async function readJson(response) {
+    try {
+        return await response.json();
+    } catch {
+        return null;
+    }
+}
+
+// Anonymous mode: POST {proxyUrl}/decision on the rate-limited Function app.
+// The proxy adds `rateLimit: { limit, remaining, resetSeconds }` to every body.
+export async function requestProxyDecision({ proxyUrl, body, fetchImpl = fetch }) {
+    const response = await fetchImpl(`${proxyUrl}/decision`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+    });
+    const payload = await readJson(response);
+    const rateLimit = readRateLimit(payload);
+
+    if (response.status === 429) {
+        throw new RateLimitError(payload?.error?.message ?? 'Too many requests.', { rateLimit });
+    }
+    if (!response.ok) {
+        const error = new DecisionApiError(
+            payload?.error?.message ?? `Request failed with status ${response.status}.`,
+            { status: response.status, code: payload?.error?.code },
+        );
+        error.rateLimit = rateLimit;
+        throw error;
+    }
+    return { payload, rateLimit };
+}
+
+export async function fetchQuota({ proxyUrl, fetchImpl = fetch }) {
+    const response = await fetchImpl(`${proxyUrl}/quota`);
+    const payload = await readJson(response);
+    const rateLimit = readRateLimit(payload);
+    if (!response.ok || !rateLimit) {
+        throw new DecisionApiError(
+            payload?.error?.message ?? `Quota request failed with status ${response.status}.`,
+            { status: response.status, code: payload?.error?.code },
+        );
+    }
+    return rateLimit;
+}
+
 // Response contract (verified by decisionClient.int.test.js):
 //   { model, usage: { input_tokens, output_tokens }, answers: { <key>: answer } }
 //   choice: { type, choice, confidence, probabilities: { <option>: p } }

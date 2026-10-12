@@ -5,7 +5,11 @@
     --text: #242424;
     --muted: #616161;
     --error: #b10e1c;
-    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    font-family:
+        'Segoe UI',
+        system-ui,
+        -apple-system,
+        sans-serif;
     color: var(--text);
     background: #fafafa;
 }
@@ -120,7 +124,7 @@ button:disabled {
     field-sizing: content;
 }
 
-input[type="text"],
+input[type='text'],
 select,
 textarea {
     width: 100%;
@@ -190,6 +194,51 @@ textarea {
 
 .decision-form > button.primary {
     align-self: flex-start;
+}
+
+.submit-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.quota-badge {
+    color: var(--muted);
+    font-size: 0.875rem;
+}
+
+.quota-badge.exhausted {
+    color: var(--error);
+    font-weight: 600;
+}
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgb(0 0 0 / 40%);
+}
+
+.modal {
+    max-width: 26rem;
+    padding: 1.25rem 1.5rem;
+    border-radius: 6px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 20%);
+}
+
+.modal h2 {
+    margin-top: 0;
+    font-size: 1.15rem;
+}
+
+.modal .countdown strong {
+    font-variant-numeric: tabular-nums;
 }
 
 .field {

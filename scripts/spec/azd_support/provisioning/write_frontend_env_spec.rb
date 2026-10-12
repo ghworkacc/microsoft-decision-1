@@ -28,6 +28,26 @@ RSpec.describe AzdSupport::Provisioning::WriteFrontendEnv do
     )
   end
 
+  it "defaults to authenticated mode without a proxy URL" do
+    described_class.run(config: config, output: output.path)
+
+    contents = File.read(output.path)
+    expect(contents).to include("VITE_ANONYMOUS_MODE=false")
+    expect(contents).to match(/^VITE_DECISION_PROXY_URL=$/)
+  end
+
+  it "writes the anonymous mode settings when set" do
+    config.set("ANONYMOUS_MODE", "true")
+    config.set("DECISION_PROXY_URL", "https://func-abc.azurewebsites.net/api")
+
+    described_class.run(config: config, output: output.path)
+
+    expect(File.read(output.path)).to include(
+      "VITE_ANONYMOUS_MODE=true",
+      "VITE_DECISION_PROXY_URL=https://func-abc.azurewebsites.net/api"
+    )
+  end
+
   it "aborts when a value the template needs is missing" do
     sparse = AzdSupport::Configuration.new
     sparse.set("ENTRA_CLIENT_ID", "client-123")

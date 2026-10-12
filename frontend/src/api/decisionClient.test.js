@@ -1,10 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
     DecisionApiError,
+    RateLimitError,
     buildDecisionRequest,
     choiceKeys,
+    fetchQuota,
     parseDecisionResponse,
     requestDecision,
+    requestProxyDecision,
 } from './decisionClient.js';
 
 const form = {
@@ -143,6 +146,106 @@ describe('requestDecision', () => {
             message: 'The API deployment nope does not exist.',
             status: 404,
             code: 'DeploymentNotFound',
+        });
+    });
+});
+
+function jsonResponse(status, body) {
+    return new Response(JSON.stringify(body), {
+        status,
+        headers: { 'Content-Type': 'application/json' },
+    });
+}
+
+const rateLimit = { limit: 5, remaining: 4, resetSeconds: 30 };
+
+describe('requestProxyDecision', () => {
+    it('POSTs to the proxy without credentials and returns the quota', async () => {
+        const fetchImpl = vi
+            .fn()
+            .mockResolvedValue(jsonResponse(200, { ...livePayload, rateLimit }));
+
+        const result = await requestProxyDecision({
+            proxyUrl: 'https://func.example/api',
+            body: { model: 'm' },
+            fetchImpl,
+        });
+
+        expect(result.rateLimit).toEqual(rateLimit);
+        expect(result.payload.answers).toEqual(livePayload.answers);
+        expect(fetchImpl).toHaveBeenCalledWith('https://func.example/api/decision', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{"model":"m"}',
+        });
+    });
+
+    it('throws RateLimitError with the quota on 429', async () => {
+        const exhausted = { limit: 5, remaining: 0, resetSeconds: 12 };
+        const fetchImpl = vi.fn().mockResolvedValue(
+            jsonResponse(429, {
+                error: { code: 'RateLimited', message: 'Slow down.' },
+                rateLimit: exhausted,
+            }),
+        );
+
+        const error = await requestProxyDecision({ proxyUrl: 'p', body: {}, fetchImpl }).catch(
+            (e) => e,
+        );
+
+        expect(error).toBeInstanceOf(RateLimitError);
+        expect(error).toMatchObject({ message: 'Slow down.', status: 429, rateLimit: exhausted });
+    });
+
+    it('surfaces other errors with any quota attached', async () => {
+        const fetchImpl = vi
+            .fn()
+            .mockResolvedValue(
+                jsonResponse(400, { error: { code: 'BadRequest', message: 'Bad.' }, rateLimit }),
+            );
+
+        const error = await requestProxyDecision({ proxyUrl: 'p', body: {}, fetchImpl }).catch(
+            (e) => e,
+        );
+
+        expect(error).toBeInstanceOf(DecisionApiError);
+        expect(error).not.toBeInstanceOf(RateLimitError);
+        expect(error).toMatchObject({ message: 'Bad.', code: 'BadRequest', rateLimit });
+    });
+
+    it('handles non-JSON error bodies', async () => {
+        const fetchImpl = vi.fn().mockResolvedValue(new Response('oops', { status: 500 }));
+
+        const error = await requestProxyDecision({ proxyUrl: 'p', body: {}, fetchImpl }).catch(
+            (e) => e,
+        );
+
+        expect(error).toMatchObject({ status: 500, rateLimit: null });
+    });
+});
+
+describe('fetchQuota', () => {
+    it('GETs the quota endpoint', async () => {
+        const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(200, { rateLimit }));
+
+        expect(await fetchQuota({ proxyUrl: 'https://func.example/api', fetchImpl })).toEqual(
+            rateLimit,
+        );
+        expect(fetchImpl).toHaveBeenCalledWith('https://func.example/api/quota');
+    });
+
+    it('throws when the proxy is disabled', async () => {
+        const fetchImpl = vi.fn().mockResolvedValue(
+            jsonResponse(404, {
+                error: {
+                    code: 'AnonymousModeDisabled',
+                    message: 'Anonymous access is not enabled.',
+                },
+            }),
+        );
+
+        await expect(fetchQuota({ proxyUrl: 'p', fetchImpl })).rejects.toMatchObject({
+            code: 'AnonymousModeDisabled',
         });
     });
 });

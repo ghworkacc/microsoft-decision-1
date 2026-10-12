@@ -29,6 +29,15 @@ module AzdSupport
       "AZURE_TENANT_ID"          => { source: :azd },
       "FOUNDRY_ENDPOINT"         => { source: :azd },
       "DECISION_DEPLOYMENT_NAME" => { source: :azd },
+      "AZURE_RESOURCE_GROUP"     => { source: :azd },
+      "ANONYMOUS_FUNCTION_APP_NAME" => { source: :azd },
+      "DECISION_PROXY_URL"       => { source: :azd, default: "" },
+      "DASHBOARD_URL"            => { source: :azd },
+
+      # --- anonymous mode inputs (`azd env set`, read by main.bicepparam) ---
+      "ANONYMOUS_MODE"           => { source: :azd, default: "false" },
+      "ANONYMOUS_CORS_ORIGINS"   => { source: :azd, default: "https://ghworkacc.github.io,http://localhost:5173" },
+      "ANONYMOUS_RATE_LIMIT_PER_MINUTE" => { source: :azd, default: "5" },
 
       # --- set by the postprovision hook (Provisioning::RegisterSpaApp) ---
       "ENTRA_CLIENT_ID"          => { source: :azd },

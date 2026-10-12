@@ -1,0 +1,7 @@
+*.test.js
+.funcignore
+.gitignore
+.prettierrc.json
+eslint.config.js
+local.settings.json
+node_modules/
