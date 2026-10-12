@@ -1,10 +1,6 @@
-export const DEMO_QUESTION = 'In what way has the customer\'s question been responded?';
+export const DEMO_QUESTION = "In what way has the customer's question been responded?";
 
-export const DEMO_CHOICES = [
-    'Answered',
-    'Promised to answer',
-    'Changed subject',
-];
+export const DEMO_CHOICES = ['Answered', 'Promised to answer', 'Changed subject'];
 
 export const QUESTION_TYPES = ['choice', 'noul', 'score'];
 
@@ -31,8 +27,8 @@ export const DEMO_QUESTIONS = [
 
 export const DEMO_STATE = [
     'Customer: I\'m having trouble setting up my model deployment.  It says "error - name included a reserved word"',
-    'Agent: The default deployment unfortunately used a reserved word.  To work around the issue, you need to '
-        + 'create a custom deployment and provide it an alternative name (e.g. \'msft-decidobot-threesixtyfive\').',
+    'Agent: The default deployment unfortunately used a reserved word.  To work around the issue, you need to ' +
+        "create a custom deployment and provide it an alternative name (e.g. 'msft-decidobot-threesixtyfive').",
 ].join('\n');
 
 export const initialFormState = {
@@ -54,9 +50,9 @@ function newQuestion() {
 function updateQuestion(form, id, update) {
     return {
         ...form,
-        questions: form.questions.map((question) => (
-            question.id === id ? { ...question, ...update(question) } : question
-        )),
+        questions: form.questions.map((question) =>
+            question.id === id ? { ...question, ...update(question) } : question,
+        ),
     };
 }
 
@@ -68,10 +64,14 @@ export function decisionFormReducer(form, action) {
             return updateQuestion(form, action.id, () => ({ type: action.value }));
         case 'setChoice':
             return updateQuestion(form, action.id, (question) => ({
-                choices: question.choices.map((choice, i) => (i === action.index ? action.value : choice)),
+                choices: question.choices.map((choice, i) =>
+                    i === action.index ? action.value : choice,
+                ),
             }));
         case 'addChoice':
-            return updateQuestion(form, action.id, (question) => ({ choices: [...question.choices, ''] }));
+            return updateQuestion(form, action.id, (question) => ({
+                choices: [...question.choices, ''],
+            }));
         case 'removeChoice':
             return updateQuestion(form, action.id, (question) => ({
                 choices: question.choices.filter((_, i) => i !== action.index),
@@ -82,7 +82,10 @@ export function decisionFormReducer(form, action) {
             return { ...form, questions: [...form.questions, newQuestion()] };
         case 'removeQuestion':
             if (form.questions.length === 1) return form;
-            return { ...form, questions: form.questions.filter((question) => question.id !== action.id) };
+            return {
+                ...form,
+                questions: form.questions.filter((question) => question.id !== action.id),
+            };
         case 'setState':
             return { ...form, state: action.value };
         default:

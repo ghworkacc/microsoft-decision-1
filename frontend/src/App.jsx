@@ -3,7 +3,11 @@ import { AuthenticatedTemplate, UnauthenticatedTemplate, useMsal } from '@azure/
 import { InteractionRequiredAuthError, InteractionStatus } from '@azure/msal-browser';
 import { loginRequest } from './authConfig.js';
 import { config } from './config.js';
-import { buildDecisionRequest, parseDecisionResponse, requestDecision } from './api/decisionClient.js';
+import {
+    buildDecisionRequest,
+    parseDecisionResponse,
+    requestDecision,
+} from './api/decisionClient.js';
 import DecisionForm from './components/DecisionForm.jsx';
 
 export default function App() {
@@ -31,9 +35,16 @@ export default function App() {
         setResult(null);
         setBusy(true);
         try {
-            const { body, questionsByKey } = buildDecisionRequest({ deploymentName: config.deploymentName, ...form });
+            const { body, questionsByKey } = buildDecisionRequest({
+                deploymentName: config.deploymentName,
+                ...form,
+            });
             const accessToken = await getAccessToken();
-            const payload = await requestDecision({ endpoint: config.foundryEndpoint, accessToken, body });
+            const payload = await requestDecision({
+                endpoint: config.foundryEndpoint,
+                accessToken,
+                body,
+            });
             setResult(parseDecisionResponse(payload, questionsByKey));
         } catch (e) {
             setError(e.message || String(e));
@@ -51,14 +62,19 @@ export default function App() {
                 </span>
                 <AuthenticatedTemplate>
                     <span className="user">{account?.username}</span>
-                    <button type="button" onClick={() => instance.logoutRedirect()}>Sign out</button>
+                    <button type="button" onClick={() => instance.logoutRedirect()}>
+                        Sign out
+                    </button>
                 </AuthenticatedTemplate>
             </header>
 
             <main>
                 <UnauthenticatedTemplate>
                     <section className="sign-in">
-                        <p>Sign in with your Microsoft Entra account to call the model on Microsoft Foundry.</p>
+                        <p>
+                            Sign in with your Microsoft Entra account to call the model on Microsoft
+                            Foundry.
+                        </p>
                         <button
                             type="button"
                             className="primary"
@@ -71,7 +87,12 @@ export default function App() {
                 </UnauthenticatedTemplate>
 
                 <AuthenticatedTemplate>
-                    <DecisionForm onSubmit={handleSubmit} busy={busy} error={error} result={result} />
+                    <DecisionForm
+                        onSubmit={handleSubmit}
+                        busy={busy}
+                        error={error}
+                        result={result}
+                    />
                 </AuthenticatedTemplate>
             </main>
         </div>

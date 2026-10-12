@@ -10,7 +10,12 @@ import {
 const form = {
     deploymentName: 'msft-decision-1',
     questions: [
-        { id: 'q1', type: 'choice', instructions: 'In what way has the customer\'s question been responded?', choices: ['Answered', 'Promised to answer', ' Changed subject ', ''] },
+        {
+            id: 'q1',
+            type: 'choice',
+            instructions: "In what way has the customer's question been responded?",
+            choices: ['Answered', 'Promised to answer', ' Changed subject ', ''],
+        },
         { id: 'q2', type: 'noul', instructions: 'Was a workaround provided?', choices: [] },
         { id: 'q3', type: 'score', instructions: 'How satisfied?', choices: ['Low', 'High', ''] },
     ],
@@ -34,7 +39,10 @@ const livePayload = {
 describe('choiceKeys', () => {
     it('slugifies labels and keeps them unique', () => {
         expect(choiceKeys(['Answered', 'Changed subject', 'answered', '!!!'])).toEqual([
-            'answered', 'changed_subject', 'answered_2', 'choice_4',
+            'answered',
+            'changed_subject',
+            'answered_2',
+            'choice_4',
         ]);
     });
 });
@@ -57,7 +65,11 @@ describe('buildDecisionRequest', () => {
                     },
                 },
                 question_2: { type: 'noul', instructions: 'Was a workaround provided?' },
-                question_3: { type: 'score', instructions: 'How satisfied?', criteria: ['Low', 'High'] },
+                question_3: {
+                    type: 'score',
+                    instructions: 'How satisfied?',
+                    criteria: ['Low', 'High'],
+                },
             },
         });
         expect(questionsByKey.question_1.labelsByKey.changed_subject).toBe('Changed subject');
@@ -102,36 +114,60 @@ describe('requestDecision', () => {
             json: async () => ({ error: { code: 'invalid_question', message: 'Bad question' } }),
         });
 
-        const error = await requestDecision({ endpoint: 'e', accessToken: 't', body: {}, fetchImpl })
-            .catch((e) => e);
+        const error = await requestDecision({
+            endpoint: 'e',
+            accessToken: 't',
+            body: {},
+            fetchImpl,
+        }).catch((e) => e);
 
         expect(error).toBeInstanceOf(DecisionApiError);
-        expect(error).toMatchObject({ message: 'Bad question', status: 422, code: 'invalid_question' });
+        expect(error).toMatchObject({
+            message: 'Bad question',
+            status: 422,
+            code: 'invalid_question',
+        });
     });
 
     it('falls back to the HTTP status when the body is not JSON', async () => {
         const fetchImpl = vi.fn().mockResolvedValue({
             ok: false,
             status: 401,
-            json: async () => { throw new SyntaxError('not json'); },
+            json: async () => {
+                throw new SyntaxError('not json');
+            },
         });
 
-        await expect(requestDecision({ endpoint: 'e', accessToken: 't', body: {}, fetchImpl }))
-            .rejects.toThrow('Request failed with HTTP 401.');
+        await expect(
+            requestDecision({ endpoint: 'e', accessToken: 't', body: {}, fetchImpl }),
+        ).rejects.toThrow('Request failed with HTTP 401.');
     });
 });
 
 describe('parseDecisionResponse', () => {
     it('maps keys back to labels and sorts by probability', () => {
-        const { questionsByKey } = buildDecisionRequest({ ...form, questions: [form.questions[0]] });
+        const { questionsByKey } = buildDecisionRequest({
+            ...form,
+            questions: [form.questions[0]],
+        });
         const result = parseDecisionResponse(livePayload, questionsByKey);
 
-        expect(result.results[0]).toMatchObject({ choiceKey: 'changed_subject', choiceLabel: 'Changed subject', confidence: 0.545 });
-        expect(result.results[0].options.map((o) => o.label)).toEqual(['Changed subject', 'Answered', 'Promised to answer']);
+        expect(result.results[0]).toMatchObject({
+            choiceKey: 'changed_subject',
+            choiceLabel: 'Changed subject',
+            confidence: 0.545,
+        });
+        expect(result.results[0].options.map((o) => o.label)).toEqual([
+            'Changed subject',
+            'Answered',
+            'Promised to answer',
+        ]);
         expect(result.usage).toEqual({ input_tokens: 66, output_tokens: 1 });
     });
 
     it('throws when the answer is missing', () => {
-        expect(() => parseDecisionResponse({ answers: {} }, { question_1: { type: 'noul' } })).toThrow(/did not include an answer/);
+        expect(() =>
+            parseDecisionResponse({ answers: {} }, { question_1: { type: 'noul' } }),
+        ).toThrow(/did not include an answer/);
     });
 });

@@ -53,14 +53,16 @@ describe('DecisionForm', () => {
         render(<DecisionForm onSubmit={onSubmit} />);
 
         await user.click(screen.getByRole('button', { name: 'Decide' }));
-        expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
-            questions: expect.arrayContaining([
-                expect.objectContaining({ type: 'choice' }),
-                expect.objectContaining({ type: 'noul' }),
-                expect.objectContaining({ type: 'score' }),
-            ]),
-            state: expect.stringMatching(/^Customer: /),
-        }));
+        expect(onSubmit).toHaveBeenCalledWith(
+            expect.objectContaining({
+                questions: expect.arrayContaining([
+                    expect.objectContaining({ type: 'choice' }),
+                    expect.objectContaining({ type: 'noul' }),
+                    expect.objectContaining({ type: 'score' }),
+                ]),
+                state: expect.stringMatching(/^Customer: /),
+            }),
+        );
     });
 
     it('disables submit while busy', () => {

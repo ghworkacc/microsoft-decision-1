@@ -14,7 +14,10 @@ export class DecisionApiError extends Error {
 }
 
 function slugify(label) {
-    return label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+    return label
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '');
 }
 
 // Maps each label to a unique, API-friendly option key ("Changed subject" -> "changed_subject").
@@ -39,9 +42,12 @@ export function buildDecisionRequest({ deploymentName, questions, state }) {
     questions.forEach((question, index) => {
         const questionNumber = index + 1;
         const instructions = question.instructions.trim();
-        if (!instructions) throw new DecisionApiError(`Question ${questionNumber}: Enter a question.`);
+        if (!instructions)
+            throw new DecisionApiError(`Question ${questionNumber}: Enter a question.`);
         if (!['choice', 'noul', 'score'].includes(question.type)) {
-            throw new DecisionApiError(`Question ${questionNumber}: Choose a supported question type.`);
+            throw new DecisionApiError(
+                `Question ${questionNumber}: Choose a supported question type.`,
+            );
         }
 
         const labels = question.choices.map((choice) => choice.trim()).filter(Boolean);
@@ -53,7 +59,9 @@ export function buildDecisionRequest({ deploymentName, questions, state }) {
         const definition = { type: question.type, instructions };
         if (question.type === 'choice') {
             const keys = choiceKeys(labels);
-            definition.criteria = Object.fromEntries(keys.map((choiceKey, i) => [choiceKey, labels[i]]));
+            definition.criteria = Object.fromEntries(
+                keys.map((choiceKey, i) => [choiceKey, labels[i]]),
+            );
             questionsByKey[key] = { type: question.type, labelsByKey: definition.criteria };
         } else if (question.type === 'score') {
             definition.criteria = labels;
@@ -100,7 +108,8 @@ export async function requestDecision({ endpoint, accessToken, body, fetchImpl =
 export function parseDecisionResponse(payload, questionsByKey) {
     const results = Object.entries(questionsByKey).map(([key, question]) => {
         const answer = payload?.answers?.[key];
-        if (!answer) throw new DecisionApiError(`The response did not include an answer for ${key}.`);
+        if (!answer)
+            throw new DecisionApiError(`The response did not include an answer for ${key}.`);
 
         if (question.type === 'choice') {
             const options = Object.entries(answer.probabilities ?? {})
@@ -121,17 +130,23 @@ export function parseDecisionResponse(payload, questionsByKey) {
         }
 
         if (question.type === 'noul') {
-            return { key, type: question.type, probability: answer.probability ?? answer.confidence };
+            return {
+                key,
+                type: question.type,
+                probability: answer.probability ?? answer.confidence,
+            };
         }
 
-        const options = Object.entries(answer.probabilities ?? {})
-            .map(([level, probability]) => {
-                const index = Number(level);
-                const label = question.labels[index] ?? question.labels[level] ?? level;
-                return { key: level, label, probability };
-            });
+        const options = Object.entries(answer.probabilities ?? {}).map(([level, probability]) => {
+            const index = Number(level);
+            const label = question.labels[index] ?? question.labels[level] ?? level;
+            return { key: level, label, probability };
+        });
         const score = answer.score ?? answer.value;
-        const nearestIndex = Math.max(0, Math.min(question.labels.length - 1, Math.round(score ?? 0)));
+        const nearestIndex = Math.max(
+            0,
+            Math.min(question.labels.length - 1, Math.round(score ?? 0)),
+        );
         return {
             key,
             type: question.type,

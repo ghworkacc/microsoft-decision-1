@@ -14,4 +14,6 @@ export const missingConfig = Object.entries({
     VITE_ENTRA_TENANT_ID: config.tenantId,
     VITE_FOUNDRY_ENDPOINT: config.foundryEndpoint,
     VITE_DECISION_DEPLOYMENT: config.deploymentName,
-}).filter(([, value]) => !value).map(([name]) => name);
+})
+    .filter(([, value]) => !value)
+    .map(([name]) => name);
