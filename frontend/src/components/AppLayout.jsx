@@ -24,15 +24,11 @@ export default function AppLayout({ headerActions, onSampleChange, children }) {
     return (
         <div className="app">
             <header className="app-header">
-                <h1>Decide Something</h1>
-                <span className="model">
-                    Microsoft-Decision-1 · <code>{config.deploymentName}</code>
-                </span>
+                <h1>Microsoft-Decision-1</h1>
                 {headerActions}
             </header>
 
             <nav className="sample-nav" aria-label="Sample presets">
-                <span className="sample-nav-label">Samples</span>
                 <div className="sample-options">
                     {samples.map((item, index) => (
                         <button

@@ -1,4 +1,4 @@
-# Decide Something (frontend)
+# Microsoft-Decision-1 (frontend)
 
 A React + MSAL single-page app that sends a question, a list of choices and some state text to the Microsoft-Decision-1 "System 1" API on Microsoft Foundry, then shows the decision.
 

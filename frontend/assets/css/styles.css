@@ -1,17 +1,18 @@
 :root {
     --accent: #0f6cbd;
-    --accent-soft: #e8f1fb;
-    --border: #d1d1d1;
+    --accent-soft: #71a2d9;
+    --border: #333;
     --text: #242424;
     --muted: #616161;
     --error: #b10e1c;
+    --background: #ccc;
     font-family:
         'Segoe UI',
         system-ui,
         -apple-system,
         sans-serif;
     color: var(--text);
-    background: #fafafa;
+    background: var(--background);
 }
 
 body {
@@ -55,7 +56,7 @@ body {
     padding: 0.65rem 0.75rem;
     border: 1px solid var(--border);
     border-radius: 4px;
-    background: #fff;
+    background: var(--background);
 }
 
 .sample-nav-label {
@@ -74,12 +75,21 @@ body {
     padding: 0.35rem 0.65rem;
     border-color: transparent;
     border-radius: 3px;
-    color: var(--muted);
+}
+
+input[type='text'].question-input {
+    border: 2px solid var(--accent-soft);
+}
+
+input[type='text'].question-input:focus-visible {
+    border: 2px solid var(--accent);
+    outline-offset: unset;
+    outline: unset;
 }
 
 .sample-option:hover,
 .sample-option:focus-visible {
-    border-color: var(--border);
+    border-color: var(--accent-soft);
 }
 
 .sample-option.active {
@@ -120,14 +130,14 @@ button {
     padding: 0.4rem 0.9rem;
     border: 1px solid var(--border);
     border-radius: 4px;
-    background: #fff;
+    background: var(--background);
     cursor: pointer;
 }
 
 button.primary {
     background: var(--accent);
     border-color: var(--accent);
-    color: #fff;
+    color: var(--background);
 }
 
 button:disabled {
@@ -135,8 +145,20 @@ button:disabled {
     cursor: default;
 }
 
-.state-entry {
+textarea {
+    resize: vertical;
+}
+
+textarea.state-entry {
     field-sizing: content;
+    border: 2px solid var(--accent-soft);
+}
+
+textarea.state-entry:focus-visible {
+    field-sizing: content;
+    border: 2px solid var(--accent);
+    outline-offset: unset;
+    outline: unset;
 }
 
 input[type='text'],
@@ -148,7 +170,7 @@ textarea {
     padding: 0.45rem 0.6rem;
     border: 1px solid var(--border);
     border-radius: 4px;
-    background: #fff;
+    background: var(--background);
 }
 
 .question-editor {
@@ -156,7 +178,7 @@ textarea {
     border: 1px solid var(--border);
     border-radius: 6px;
     padding: 1rem;
-    background: #fff;
+    background: var(--background);
 }
 
 .question-heading {
@@ -191,14 +213,6 @@ textarea {
     padding: 0.25rem 0.55rem;
     font-size: 1.1rem;
     line-height: 1;
-}
-
-.subtle-button {
-    color: var(--muted);
-}
-
-textarea {
-    resize: vertical;
 }
 
 .decision-form {
@@ -243,7 +257,7 @@ textarea {
     max-width: 26rem;
     padding: 1.25rem 1.5rem;
     border-radius: 6px;
-    background: #fff;
+    background: var(--background);
     box-shadow: 0 8px 24px rgb(0 0 0 / 20%);
 }
 
@@ -290,7 +304,7 @@ textarea {
     padding: 1.5rem;
     border: 1px solid var(--border);
     border-radius: 6px;
-    background: #fff;
+    background: var(--background);
 }
 
 .error {
@@ -351,7 +365,7 @@ textarea {
 .bar {
     height: 0.6rem;
     border-radius: 3px;
-    background: #fff;
+    background: var(--background);
     overflow: hidden;
 }
 

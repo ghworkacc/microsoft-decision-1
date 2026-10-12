@@ -47,6 +47,7 @@ export default function QuestionEditor({ question, index, canRemove, dispatch })
             <label className="field">
                 <span className="field-label">Question</span>
                 <input
+                    className="question-input"
                     type="text"
                     aria-label={`Question ${index + 1}`}
                     value={question.instructions}
