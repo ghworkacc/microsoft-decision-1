@@ -88,6 +88,21 @@ body {
     font-weight: 600;
 }
 
+.attached-images {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin: -0.5rem 0 1.5rem;
+}
+
+.attached-images img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+}
+
 .visually-hidden {
     position: absolute;
     width: 1px;

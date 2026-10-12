@@ -1,6 +1,7 @@
 export const name = 'keep talking (decision unit)';
 
 export const form = {
+    attachedImages: ['keep_talking.png'],
     questions: [
         {
             id: 'question-1',
@@ -34,7 +35,5 @@ export const form = {
         '- Otherwise, if there is exactly one blue wire, cut the first wire.',
         '- Otherwise, if there is more than one yellow wire, cut the last wire.',
         '- Otherwise, cut the second wire.',
-        '',
-        'A later rule is considered only when every earlier rule is false. This module has one correct cut; there is no second wire-cutting pass after the module is disarmed.',
     ].join('\n'),
 };
