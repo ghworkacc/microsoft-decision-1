@@ -21,8 +21,9 @@ function ProbabilityList({ options, chosenKey }) {
 function ResultChoice({ result }) {
     return (
         <section className="decision-result" aria-live="polite">
+            <h2>{result.question}</h2>
             <h2>
-                {result.question}: <span className="choice">{result.choiceLabel}</span>
+                <span className="choice">{result.choiceLabel}</span>
             </h2>
             <p className="confidence">Confidence {percent(result.confidence)}</p>
             <ProbabilityList options={result.options} chosenKey={result.choiceKey} />
@@ -53,8 +54,9 @@ function ResultNoul({ result }) {
 function ResultScore({ result }) {
     return (
         <section className="decision-result" aria-live="polite">
+            <h2>{result.question}</h2>
             <h2>
-                {result.question}: <span className="choice">{result.scoreLabel}</span>
+                <span className="choice">{result.scoreLabel}</span>
             </h2>
             <p className="confidence">Score {result.score.toFixed(2)}</p>
             <ProbabilityList options={result.options} />
