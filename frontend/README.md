@@ -37,6 +37,16 @@ pnpm build
 
 This writes minified, ready-to-serve static files to `dist/`. The `VITE_*` values are inlined at build time. `pnpm preview` serves the build on http://localhost:5173.
 
+## Publish to GitHub Pages
+
+```
+pnpm run publish
+```
+
+Builds with base path `/microsoft-decision-1-example/`, copies `dist/` into `../static_repo/microsoft-decision-1-example` (on its `gh-pages` branch), commits if anything changed, and pushes `gh-pages`. The site is served at https://ghworkacc.github.io/microsoft-decision-1-example/, which must be a SPA redirect URI on the app registration (it is in the default `SPA_REDIRECT_URIS`).
+
+Use `pnpm run publish`, not `pnpm publish` — the latter is pnpm's built-in npm-registry command.
+
 ## Layout
 
 ```

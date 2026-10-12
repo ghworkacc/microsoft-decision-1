@@ -9,7 +9,8 @@
         "test": "vitest --no-watch",
         "lint": "eslint .",
         "build": "vite build",
-        "preview": "vite preview"
+        "preview": "vite preview",
+        "publish": "D=../static_repo/microsoft-decision-1-example && git -C $D checkout gh-pages && vite build --base=/microsoft-decision-1-example/ && cp -r dist/. $D/ && touch $D/.nojekyll && git -C $D add -A && (git -C $D diff --cached --quiet || git -C $D commit -m 'Publish frontend build') && git -C $D push origin gh-pages"
     },
     "devDependencies": {
         "@eslint/js": "^9.32.0",
