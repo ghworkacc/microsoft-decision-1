@@ -1,6 +1,5 @@
 import { useReducer } from 'react';
-import { decisionFormReducer, initialFormState, QUESTION_TYPES } from '../state/decisionForm.js';
-import QuestionChoices from './QuestionChoices.jsx';
+import { decisionFormReducer, initialFormState } from '../state/decisionForm.js';
 import QuestionEditor from './QuestionEditor.jsx';
 import DecisionResult from './DecisionResult.jsx';
 import StateEntry from './StateEntry.jsx';

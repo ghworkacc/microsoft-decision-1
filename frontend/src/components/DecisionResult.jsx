@@ -31,17 +31,22 @@ function ResultChoice({ number, result }) {
 }
 
 function ResultNoul({ number, result }) {
+    const answerLabel = result.confidence >= 0.5 ? 'Yes' : 'No';
+    const answerProbability = result.confidence >= 0.5 ? result.confidence : 1 - result.confidence;
+
     return (
         <section className="decision-result" aria-live="polite">
-            <h2>
-                Question {number}:{' '}
-                <span className="choice">{result.probability >= 0.5 ? 'Yes' : 'No'}</span>
-            </h2>
-            <p className="confidence">Yes probability {percent(result.probability)}</p>
+            <h2>Question {number}: </h2>
+            <p className="confidence">
+                {answerLabel} probability {percent(answerProbability)}
+            </p>
             <ProbabilityList
                 options={[
-                    { key: 'yes', label: 'Yes', probability: result.probability },
-                    { key: 'no', label: 'No', probability: 1 - result.probability },
+                    {
+                        key: answerLabel.toLowerCase(),
+                        label: answerLabel,
+                        probability: answerProbability,
+                    },
                 ]}
             />
         </section>

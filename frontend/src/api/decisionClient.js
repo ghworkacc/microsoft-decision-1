@@ -133,7 +133,7 @@ export function parseDecisionResponse(payload, questionsByKey) {
             return {
                 key,
                 type: question.type,
-                probability: answer.probability ?? answer.confidence,
+                confidence: answer.probability ?? answer.confidence ?? answer.noul,
             };
         }
 
