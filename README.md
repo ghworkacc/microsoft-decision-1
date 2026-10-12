@@ -1,23 +1,18 @@
-# Decide Something
+# Microsoft-Decision-1
 
 A React single-page app for **Microsoft-Decision-1**, using its "System 1" API on Microsoft Foundry. You enter a question, a list of choices and some state text (for example, a conversation transcript). The model picks a choice and returns its confidence and the probability of each option.
 
-```mermaid
-flowchart LR
-    Browser -- "MSAL (auth code + PKCE)" --> Entra[Microsoft Entra ID]
-    Browser -- "POST /providers/microsoft/v1/systemone<br/>Bearer token" --> Foundry["Foundry: the-new-foundry<br/>deployment msft-decision-1"]
-```
+There are two deployment modes, currently I've set it to anonymous access mode.
 
-The browser signs the user in with MSAL. It requests a token for `https://cognitiveservices.azure.com/.default` and calls Foundry directly. There is no backend. Each signed-in user needs data-plane access to the Foundry account, for example the *Cognitive Services User* role.
-
-Alternatively, [anonymous mode](#anonymous-mode) skips sign-in and sends requests through a rate-limited Azure Function.
 
 ## Quick Start
 
 ```sh
 azd config set alpha.deployment.stacks on   # required, see "Infrastructure" below
                                              # (or per shell: export AZD_ALPHA_ENABLE_DEPLOYMENT_STACKS=true)
+
 azd up                                       # deploys the model + app registration, writes frontend/.env.local
+
 cd frontend
 pnpm install
 pnpm dev                                     # http://localhost:5173
