@@ -82,7 +82,9 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
 resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: '${abbrs.storageAccounts}${resourceToken}'
   location: location
-  tags: tags
+  // Opts out of the tenant policy that disables public network access, which
+  // otherwise blocks Flex Consumption zip deployments with a 403.
+  tags: union(tags, { SecurityControl: 'ignore' })
   kind: 'StorageV2'
   sku: {
     name: 'Standard_LRS'
