@@ -4,6 +4,7 @@ import json from '@eslint/json';
 import importPlugin from '@njax/eslint-plugin-import';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
+import prettierRecommended from 'eslint-plugin-prettier/recommended';
 import { defineConfig, globalIgnores } from 'eslint/config';
 
 const isVsCode = process.env.ELECTRON_NO_ASAR === '1';
@@ -26,7 +27,7 @@ export default defineConfig([
             react: { version: 'detect' },
         },
         languageOptions: {
-            globals: {...globals.browser, ...globals.node},
+            globals: { ...globals.browser, ...globals.node },
             parserOptions: {
                 ecmaVersion: 'latest',
                 sourceType: 'module',
@@ -34,29 +35,7 @@ export default defineConfig([
             },
         },
         rules: {
-            indent: [
-                'error',
-                4,
-                {
-                    SwitchCase: 1,
-                    FunctionDeclaration: {'parameters': 'first'},
-                    FunctionExpression: {'parameters': 'first'},
-                    CallExpression: {'arguments': 'first'},
-                    // JSX indentation is handled by react/jsx-indent*
-                    ignoredNodes: ['JSXElement', 'JSXElement *', 'JSXFragment', 'JSXFragment *'],
-                }
-            ],
-            'react/jsx-indent': ['error', 4],
-            'react/jsx-indent-props': ['error', 4],
             'react/prop-types': 'off',
-            quotes: [
-                'error',
-                'single'
-            ],
-            semi: [
-                'error',
-                'always'
-            ],
             curly: 'off',
             'padded-blocks': 'off',
             'array-bracket-spacing': 'off',
@@ -73,6 +52,11 @@ export default defineConfig([
         ignores: ['package-lock.json'],
         plugins: { json },
         language: 'json/json',
-        extends: ['json/recommended']
+        extends: ['json/recommended'],
+    },
+    {
+        // Keep this last so Prettier disables conflicting formatting rules.
+        ...prettierRecommended,
+        files: ['**/*.{js,mjs,cjs,jsx}'],
     },
 ]);
