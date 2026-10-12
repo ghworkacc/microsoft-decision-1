@@ -34,7 +34,7 @@ module AzdSupport
       "DECISION_DEPLOYMENT_NAME" => { source: :azd },
       "DECISION_CAPACITY"        => { source: :azd, default: "10" },
       "FRONTEND_URL"             => { source: :azd, default: "https://ghworkacc.github.io/microsoft-decision-1-example/" },
-      "SPA_REDIRECT_URIS"        => { source: :azd, default: "http://localhost:5173" },
+      "ADDITIONAL_SPA_REDIRECT"  => { source: :azd, default: "" },
       "AZURE_RESOURCE_GROUP"     => { source: :azd },
       "ANONYMOUS_FUNCTION_APP_NAME" => { source: :azd },
       "DECISION_PROXY_URL"       => { source: :azd, default: "" },

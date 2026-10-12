@@ -82,6 +82,7 @@ RSpec.describe AzdSupport::Configuration do
       hash = config.to_env_hash
       expect(hash["ANONYMOUS_MODE"]).to eq("false")
       expect(hash["FRONTEND_URL"]).to eq("https://ghworkacc.github.io/microsoft-decision-1-example/")
+      expect(hash["ADDITIONAL_SPA_REDIRECT"]).to eq("")
       expect(hash["DECISION_PROXY_URL"]).to eq("")
       expect(hash["ANONYMOUS_CORS_ORIGINS"]).to eq("https://ghworkacc.github.io,http://localhost:5173")
       expect(hash["ANONYMOUS_RATE_LIMIT_PER_MINUTE"]).to eq("5")
