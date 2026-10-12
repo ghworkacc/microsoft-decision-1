@@ -27,7 +27,7 @@ param decisionSkuName string = 'GlobalStandard'
 
 @description('Model deployment capacity (1 unit = 1 request per 60 seconds).')
 @minValue(1)
-param decisionCapacity int = 10
+param decisionCapacity int = 60
 
 @description('azd environment name; names the resource group for the anonymous proxy.')
 param environmentName string
