@@ -9,7 +9,7 @@ require "azd_support"
 
 # End-to-end check of a provisioned environment (run `azd up` first):
 #   - the production build of the frontend is served and wired to the azd outputs
-#   - the Entra app registration and Foundry CORS allow the browser sign-in + API call
+#   - the Entra app registration allows the browser sign-in + API call
 #   - the Microsoft-Decision-1 deployment answers authenticated requests
 #
 # Instead of a browser MSAL sign-in, API calls use an `az` CLI token for the

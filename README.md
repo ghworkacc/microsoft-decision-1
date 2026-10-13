@@ -11,32 +11,35 @@ There are two deployment modes, currently I've set it to anonymous access mode.
 - [Azure Developer CLI (azd)](https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd), with the `deployment.stacks` alpha feature enabled
 - [Ruby](https://www.ruby-lang.org/en/documentation/installation/) (for hook scripts)
 - [Node.js](https://nodejs.org/en/download) and [pnpm](https://pnpm.io/installation)
-
+- A Foundry Project ready for models to be deployed to
 
 ## Quick Start
 
+### Configure
 This repository assumes you have an existing Foundry account you plan to deploy into.  Configure this via the azd tool.
 
 ```sh
+azd config set alpha.deployment.stacks on  
+
 azd env set FOUNDRY_RESOURCE_GROUP_NAME existing-foundry-rg
-azd env set SPA_REDIRECT_URIS "http://localhost:5173,https://gh-handle.github.com/microsoft-decision-1-example/"
 azd env set FRONTEND_URL "https://gh-handle.github.com/microsoft-decision-1-example/"
+azd env set ADDITIONAL_SPA_REDIRECT "http://localhost:5173"
+azd env set DECISION_CAPACITY "10" # how many API requests per minute of model throughput
+
+# These are the demo settings
+# azd env set ANONYMOUS_MODE "true"
+# azd env set ANONYMOUS_CORS_ORIGINS "https://ghworkacc.github.io,http://localhost:5173"
+# azd env set ANONYMOUS_RATE_LIMIT_PER_MINUTE "5"
 ```
 
 Then run the following to deploy the model and the app registration, and start the frontend:
 
-
-```
-
 ```sh
-azd config set alpha.deployment.stacks on   # required, see "Infrastructure" below
-                                             # (or per shell: export AZD_ALPHA_ENABLE_DEPLOYMENT_STACKS=true)
-
-azd up                                       # deploys the model + app registration, writes frontend/.env.local
+azd up         # deploys the model + app registration, writes frontend/.env.local
 
 cd frontend
 pnpm install
-pnpm dev                                     # http://localhost:5173
+pnpm dev       # http://localhost:5173
 ```
 
 
@@ -76,18 +79,6 @@ Everything is defined in Bicep. The Foundry account `the-new-foundry` (resource 
 | Entra app registration (SPA redirect URIs, Cognitive Services `user_impersonation`) | [infra/identity/app-registration.bicep](infra/identity/app-registration.bicep) | the `postprovision` hook (`az deployment sub create`) |
 | Resource group `rg-poc-decide-something-<env>` with the anonymous proxy: Function app (Flex Consumption, Node 22), storage, Application Insights, Log Analytics, dashboard | [infra/modules/anonymous-api.bicep](infra/modules/anonymous-api.bicep), [infra/modules/dashboard.bicep](infra/modules/dashboard.bicep) | azd, as a deployment stack |
 | *Cognitive Services User* on the Foundry account for the Function's managed identity | [infra/modules/foundry-role-assignment.bicep](infra/modules/foundry-role-assignment.bicep) | azd, as a deployment stack |
-
-### Settings
-
-Set these with `azd env set <NAME> <value>` before `azd provision`:
-
-| Name | Default | Purpose |
-| --- | --- | --- |
-| `SPA_REDIRECT_URIS` | `http://localhost:5173` | Comma-separated SPA redirect URIs. Add your production origin here, e.g. `http://localhost:5173,https://decide.example.com` |
-| `DECISION_CAPACITY` | `10` | Deployment capacity (1 unit = 1 request per minute) |
-| `ANONYMOUS_MODE` | `false` | `true` lets anyone use the app without signing in, through the rate-limited proxy. See [Anonymous mode](#anonymous-mode) |
-| `ANONYMOUS_CORS_ORIGINS` | `https://ghworkacc.github.io,http://localhost:5173` | Comma-separated browser origins allowed to call the proxy |
-| `ANONYMOUS_RATE_LIMIT_PER_MINUTE` | `5` | Proxy requests allowed per client IP per minute |
 
 ### Outputs
 
