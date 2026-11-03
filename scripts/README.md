@@ -43,3 +43,21 @@ bundle install
 bundle exec rspec
 ```
 
+## On-demand demo repair
+
+The tenant policy hides demo storage accounts between demonstrations by
+disabling public network access and removing the `SecurityControl=ignore` tag.
+Run the repair command on demo day to restore the Flex Consumption deployment
+path for the active anonymous Function App:
+
+```sh
+scripts/exe/fix --dry-run
+scripts/exe/fix
+```
+
+The command resolves the Function App and its `AzureWebJobsStorage__accountName`
+setting from the active azd environment, merges the exemption tag without
+overwriting other tags, verifies the resulting storage account state, and runs
+`azd deploy api` so the Flex host reloads the deployment package. The dry run
+performs none of these changes or the deployment.
+

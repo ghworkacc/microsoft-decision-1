@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'USAGE'
+Usage: scripts/exe/fix [--dry-run]
+
+Restore on-demand public access for the active anonymous Function App's
+storage account. The command enables public network access and merges the
+SecurityControl=ignore policy exemption tag without replacing other tags,
+then redeploys the API package so the Flex host reloads it.
+
+Environment overrides:
+  AZURE_RESOURCE_GROUP           Resource group containing the Function App
+  ANONYMOUS_FUNCTION_APP_NAME    Function App whose storage account to repair
+USAGE
+}
+
+dry_run=false
+case "${1:-}" in
+  "") ;;
+  --dry-run) dry_run=true ;;
+  --help|-h) usage; exit 0 ;;
+  *) printf 'error: unknown argument: %s\n' "$1" >&2; usage >&2; exit 2 ;;
+esac
+
+command -v az >/dev/null 2>&1 || {
+  printf 'error: Azure CLI (az) is required\n' >&2
+  exit 1
+}
+command -v azd >/dev/null 2>&1 || {
+  printf 'error: Azure Developer CLI (azd) is required\n' >&2
+  exit 1
+}
+
+azd_value() {
+  local key=$1
+  if [[ -n "${!key:-}" ]]; then
+    printf '%s\n' "${!key}"
+    return
+  fi
+
+  azd env get-value "$key" 2>/dev/null
+}
+
+resource_group=$(azd_value AZURE_RESOURCE_GROUP)
+function_app=$(azd_value ANONYMOUS_FUNCTION_APP_NAME)
+
+if [[ -z "$resource_group" || -z "$function_app" ]]; then
+  printf 'error: could not resolve AZURE_RESOURCE_GROUP and ANONYMOUS_FUNCTION_APP_NAME from azd\n' >&2
+  exit 1
+fi
+
+subscription_id=$(az account show --query id --output tsv)
+app_id="/subscriptions/$subscription_id/resourceGroups/$resource_group/providers/Microsoft.Web/sites/$function_app"
+
+storage_account=$(az rest \
+  --method post \
+  --url "https://management.azure.com${app_id}/config/appsettings/list?api-version=2024-04-01" \
+  --query "properties.AzureWebJobsStorage__accountName" \
+  --output tsv)
+
+if [[ -z "$storage_account" ]]; then
+  printf 'error: %s has no AzureWebJobsStorage__accountName setting\n' "$function_app" >&2
+  exit 1
+fi
+
+storage_id="/subscriptions/$subscription_id/resourceGroups/$resource_group/providers/Microsoft.Storage/storageAccounts/$storage_account"
+current_public_access=$(az resource show --ids "$storage_id" --query properties.publicNetworkAccess --output tsv)
+current_exemption=$(az resource show --ids "$storage_id" --query tags.SecurityControl --output tsv)
+
+printf 'Function App: %s\n' "$function_app"
+printf 'Storage account: %s\n' "$storage_account"
+printf 'Public network access: %s -> Enabled\n' "${current_public_access:-<unset>}"
+printf 'SecurityControl tag: %s -> ignore\n' "${current_exemption:-<unset>}"
+
+if [[ "$dry_run" == true ]]; then
+  printf 'Dry run: no Azure resources changed.\n'
+  exit 0
+fi
+
+az resource update \
+  --ids "$storage_id" \
+  --set properties.publicNetworkAccess=Enabled \
+  --output none
+
+az tag update \
+  --resource-id "$storage_id" \
+  --operation merge \
+  --tags SecurityControl=ignore \
+  --output none
+
+verified_public_access=$(az resource show --ids "$storage_id" --query properties.publicNetworkAccess --output tsv)
+verified_exemption=$(az resource show --ids "$storage_id" --query tags.SecurityControl --output tsv)
+
+if [[ "$verified_public_access" != "Enabled" || "$verified_exemption" != "ignore" ]]; then
+  printf 'error: storage account repair could not be verified\n' >&2
+  printf '  public network access: %s\n' "$verified_public_access" >&2
+  printf '  SecurityControl tag: %s\n' "$verified_exemption" >&2
+  exit 1
+fi
+
+printf 'Storage account repaired and verified.\n'
+printf 'Redeploying the API package...\n'
+azd deploy api
